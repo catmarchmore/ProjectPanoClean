@@ -1,0 +1,209 @@
+is_global = true
+build_property.TargetFramework = net9.0
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = DemoWebApp1
+build_property.RootNamespace = DemoWebApp1
+build_property.ProjectDir = C:\Users\catherine.moritz\source\repos\DemoWebApp1\DemoWebApp1\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\catherine.moritz\source\repos\DemoWebApp1\DemoWebApp1
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/CombinedJobs/CombinedJobs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tYmluZWRKb2JzXENvbWJpbmVkSm9icy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/CombinedJobs/CombJobsSep.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tYmluZWRKb2JzXENvbWJKb2JzU2VwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/CombinedJobs/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tYmluZWRKb2JzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/CostRpt/CostRpt.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29zdFJwdFxDb3N0UnB0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Deliverables/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGVsaXZlcmFibGVzXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Deliverables/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGVsaXZlcmFibGVzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/Index1.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXEluZGV4MS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/PMUI.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXFBNVUkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/PMUI2.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXFBNVUkyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/PMUI3.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXFBNVUkzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/PMUI4.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXFBNVUk0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ETC/_AddETCHrs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRVRDXF9BZGRFVENIcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/JobIndex/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSm9iSW5kZXhcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/JobStatus/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSm9iU3RhdHVzXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/NewJobs/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmV3Sm9ic1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/NewJobs/Summary.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmV3Sm9ic1xTdW1tYXJ5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJpdmFjeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ResourceSpread/Home.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVzb3VyY2VTcHJlYWRcSG9tZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ResourceSpread/Overall.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVzb3VyY2VTcHJlYWRcT3ZlcmFsbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ResourceSpread/OverallDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVzb3VyY2VTcHJlYWRcT3ZlcmFsbERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/ResourceSpread/ResourceSpread.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVzb3VyY2VTcHJlYWRcUmVzb3VyY2VTcHJlYWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Shared/Partials/EditETCHrs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFBhcnRpYWxzXEVkaXRFVENIcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/Bubbles.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcQnViYmxlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/Bubbles1.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcQnViYmxlczEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/Map.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcTWFwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/Map1.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcTWFwMS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/Map2.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcTWFwMi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/MktIndex.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcTWt0SW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Stats/TreeMap.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHNcVHJlZU1hcC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/User/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/User/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxEZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/User/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/User/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/User/Test.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxUZXN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_Admin/AdminHome.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0FkbWluXEFkbWluSG9tZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_Admin/JobDtls.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0FkbWluXEpvYkR0bHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_Admin/Jobs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0FkbWluXEpvYnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_Admin/StoredProcedures.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0FkbWluXFN0b3JlZFByb2NlZHVyZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/catherine.moritz/source/repos/DemoWebApp1/DemoWebApp1/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-7ziypneugl

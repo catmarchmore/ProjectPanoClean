@@ -1,0 +1,75 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\resourcespread\\resourcespread.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\resourcespread\\resourcespread.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\resourcespread\\resourcespread.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\resourcespread\\resourcespread.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 159,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ResourceSpread.cshtml",
+              "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ResourceSpread\\ResourceSpread.cshtml",
+              "RelativeDocumentMoniker": "Pages\\ResourceSpread\\ResourceSpread.cshtml",
+              "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ResourceSpread\\ResourceSpread.cshtml",
+              "RelativeToolTip": "Pages\\ResourceSpread\\ResourceSpread.cshtml",
+              "ViewState": "AgIAAEkBAAAAAAAAAADwv1UBAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-09-09T05:18:41.617Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ResourceSpread.cshtml.cs",
+              "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ResourceSpread\\ResourceSpread.cshtml.cs",
+              "RelativeDocumentMoniker": "Pages\\ResourceSpread\\ResourceSpread.cshtml.cs",
+              "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ResourceSpread\\ResourceSpread.cshtml.cs",
+              "RelativeToolTip": "Pages\\ResourceSpread\\ResourceSpread.cshtml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-09T05:18:40.067Z"
+            }
+          ]
+        },
+        {
+          "DockedHeight": 521,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{a80febb4-e7e0-4147-b476-21aaf2453969}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
