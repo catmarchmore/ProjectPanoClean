@@ -1,0 +1,1467 @@
+﻿@page
+@using System.Linq
+@using System.Text.Json
+@using ProjectPano
+@using ProjectPano.Model
+@using static ProjectPano.Model.DAL
+@model ProjectPano.Pages.ETC.Index1Model
+
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "Estimates to Complete";
+}
+
+@* add this to the admin page later *@
+<a href="/_Admin/AdminHome">Admin Home</a>
+
+<br />
+<br />
+<button id="addInitialEtcBtn" class="btn btn-danger">Bulk Add Initial ETCs - ADMIN ONLY!</button>
+<br />
+<br />
+<h5 class="custom-h1">Estimates to Complete</h5>
+
+<div class="d-flex align-items-center mb-2">
+    <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
+    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true" style="width: 700px;" 
+        asp-items="Model.JobSelectList">
+        <option value="">--Select Job --</option>
+    </select>
+</div>
+
+<!--COST REPORT TABLE-->
+<table class="table table-hover table-bordered table-compact">
+    <thead>
+        <!-- Group Header Row -->
+        <tr class="custom-header-costrpt2">
+            <th></th>
+            <th colspan="8" class="text-center colgroup-hours">
+                Hours
+            </th>
+            <th colspan="8" class="text-center colgroup-dollars">
+                Dollars
+            </th>
+            <th colspan="3" class="text-center">Percentages</th>
+            <th></th>
+        </tr>
+
+        <tr class="custom-header-costrpt2">
+            <th></th>
+            <th class="align-middle text-center">A</th>
+            <th class="align-middle text-center">B</th>
+            <th class="align-middle text-center">C</th>
+            <th class="align-middle text-center">D= <br />A+B+C</th>
+            <th class="align-middle text-center">E</th>
+            <th class="align-middle text-center disabled-cell1">F<br/> Info Only </th>
+            <th class="align-middle text-center">G</th>
+            <th class="align-middle text-center">H = <br/> E+G</th>
+
+            <th class="align-middle text-center">I</th>
+            <th class="align-middle text-center">J</th>
+            <th class="align-middle text-center">K</th>
+            <th class="align-middle text-center">L= <br />I+J+K</th>
+            <th class="align-middle text-center">M</th>
+            <th class="align-middle text-center disabled-cell1">N<br /> Info Only </th>
+            <th class="align-middle text-center">O</th>
+            <th class="align-middle text-center">P = <br /> M+O</th>
+
+            <th class="align-middle text-center">Q = <br/> E/D</th>
+            <th class="align-middle text-center">R = <br/> M/L</th>
+            <th class="align-middle text-center">S</th>
+            <th class="align-middle text-center">T = <br /> S/R</th>
+        </tr>
+
+        <tr class="custom-header-costrpt3">
+            <th>Charge Code</th>
+
+            <!-- HOURS -->
+            <th class="align-top col-hours text-center">Orig</th>
+            <th class="align-top col-hours-toggle text-center">Pending<br />Change</th>
+            <th class="align-top col-hours-toggle text-center">Approved<br />Change</th>
+            <th class="align-top col-hours text-center">Current<br />Approved</th>
+@*          <th class="align-top col-hours text-center">Cumul<br />Spent Thru <br/>Prev Week</th>
+            <th class="align-top col-hours text-center disabled-cell1">Curr<br />Week <br />Spent</th> *@
+            <th class="align-top col-hours text-center">
+                Cumul<br />Spent Thru <br />@(Model.PrevWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center disabled-cell1">
+                Spent  <br />Wk End<br />@(Model.CurrWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center">ETC</th>
+            <th class="align-top col-hours text-center">EAC</th>
+
+            <!-- DOLLARS -->
+            <th class="align-top col-dollars text-center">Orig</th>
+            <th class="align-top col-dollars-toggle text-center">Pending<br />Change</th>
+            <th class="align-top col-dollars-toggle text-center">Approved<br />Change</th>
+            <th class="align-top col-dollars text-center"">Current<br />Approved</th>
+            <th class="align-top col-hours text-center">
+                Cumul<br />Spent Thru <br />@(Model.PrevWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center disabled-cell1">
+                Spent  <br />Wk End<br />@(Model.CurrWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-dollars text-center">ETC</th>
+            <th class="align-top col-dollars text-center">EAC</th>
+
+            <th class="align-top text-center">% Hrs<br />Spent</th>
+            <th class="align-top text-center">% $<br />Spent</th>
+            <th class="align-top text-center">% <br /> Complete</th>
+            <th class="align-middle text-center">CPI</th>
+        </tr>
+    </thead>
+    @{
+        decimal totalOB_HRS = 0, totalUnApprovedCNHRS = 0, totalApprovedCNHRS = 0, totalCURRHRS = 0;
+        decimal totalPrevWkHrs = 0, totalEACHrs = 0, totalETCHrsCR = 0, totalCurrWkHrs = 0;
+
+        decimal totalOB_COST = 0, totalUnApprovedCNCOST = 0, totalApprovedCNCOST = 0;
+        decimal totalCURRCOST = 0, totalPrevWkCost = 0, totalEAC_Cost = 0, totalETCCost = 0, totalCurrWkCost = 0;
+    }
+
+    <tbody>
+        @{
+            var grouped = Model.vwBudgetActuals
+            .OrderBy(x => x.DiscGroupSort)
+            .ThenBy(x => x.DiscSort)
+            .GroupBy(x => new { x.DiscGroupSort, x.DiscGroup });
+        }
+
+        @foreach (var grp in grouped)
+        {
+            // Group accumulators
+            decimal g_OB_HRS = 0, g_UnApprovedCNHRS = 0, g_ApprovedCNHRS = 0, g_CURRHRS = 0;
+            decimal g_PrevWkHrs = 0, g_EACHrs = 0, g_ETCHrs = 0, g_CurrWkHrs = 0;
+
+            decimal g_OB_COST = 0, g_UnApprovedCNCOST = 0, g_ApprovedCNCOST = 0, g_CURRCOST = 0;
+            decimal g_PrevWkCost = 0, g_EAC_Cost = 0, g_ETCCost = 0, g_CurrWkCost = 0;
+
+            <!-- Group Header -->
+            <tr style="background-color:#eee; font-weight:bold;">
+                <td colspan="21">@grp.Key.DiscGroup</td>
+            </tr>
+
+            @foreach (var item in grp)
+            {
+                // accumulate
+                g_OB_HRS += item.OB_HRS;
+                g_UnApprovedCNHRS += item.UnApprovedCNHRS;
+                g_ApprovedCNHRS += item.ApprovedCNHRS;
+                g_CURRHRS += item.CURRHRS;
+                g_PrevWkHrs += item.PrevWkCumulHrs;
+                g_EACHrs += item.EAC_Hrs;
+                g_ETCHrs += item.ETC_Hrs;
+                g_CurrWkHrs += item.CurrWkHrs;
+
+                g_OB_COST += item.OB_COST;
+                g_UnApprovedCNCOST += item.UnApprovedCNCOST;
+                g_ApprovedCNCOST += item.ApprovedCNCOST;
+                g_CURRCOST += item.CURRCOST;
+                g_PrevWkCost += item.PrevWkCumulCost;
+                g_EAC_Cost += item.EAC_Cost;
+                g_ETCCost += item.ETC_Cost;
+                g_CurrWkCost += item.CurrWkCost;
+
+                <!-- detail row (your existing cells) -->
+                <tr>
+                    <td style="padding-left: 10px;">@item.MYTASK</td>
+                    <td class="text-right">@item.OB_HRS.ToString("N2")</td>
+                    <td class="text-right">@item.UnApprovedCNHRS.ToString("N2")</td>
+                    <td class="text-right">@item.ApprovedCNHRS.ToString("N2")</td>
+                    <td class="text-right">@item.CURRHRS.ToString("N2")</td>
+                    <td class="text-right">@item.PrevWkCumulHrs.ToString("N2")</td>
+                    <td class="text-right disabled-cell1">@item.CurrWkHrs.ToString("N2")</td>
+                    <td class="text-right">@item.ETC_Hrs.ToString("N2")</td>
+                    <td class="text-right">@item.EAC_Hrs.ToString("N2")</td>
+
+                    <td class="text-right bg-palegreen">@item.OB_COST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.UnApprovedCNCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.ApprovedCNCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.CURRCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.PrevWkCumulCost.ToString("C2")</td>
+                    <td class="text-right bg-palegreen disabled-cell1">@item.CurrWkCost.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.ETC_Cost.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@item.EAC_Cost.ToString("C2")</td>
+
+                    <td class="text-right">
+                        @(item.CURRHRS != 0 ? String.Format("{0:P0}", item.PrevWkCumulHrs / item.CURRHRS) : "-")
+                    </td>
+                    <td class="text-right">
+                        @(item.CURRCOST != 0 ? String.Format("{0:P0}", item.PrevWkCumulCost / item.CURRCOST) : "-")
+                    </td>
+                    <td class="text-right">@item.PctCompl.ToString("P0")</td>
+                    <td class="text-right">
+                        @(item.PctCompl != 0 && item.CURRCOST != 0 && item.PrevWkCumulCost != 0
+                                        ? (item.PctCompl / (item.PrevWkCumulCost / item.CURRCOST)).ToString("N2")
+                                        : "-")
+            </td>
+        </tr>
+                }
+
+            <!-- Group Footer -->
+            <tr style="font-weight:bold; background-color:#f9f9f9;">
+                <td><i>Subtotal</i></td>
+                @* <td><i>Subtotal @grp.Key.DiscGroup</i></td> *@
+                <td class="text-right">@g_OB_HRS.ToString("N2")</td>
+                <td class="text-right">@g_UnApprovedCNHRS.ToString("N2")</td>
+                <td class="text-right">@g_ApprovedCNHRS.ToString("N2")</td>
+                <td class="text-right">@g_CURRHRS.ToString("N2")</td>
+                <td class="text-right">@g_PrevWkHrs.ToString("N2")</td>
+                <td class="text-right disabled-cell1">@g_CurrWkHrs.ToString("N2")</td>
+                <td class="text-right">@g_ETCHrs.ToString("N2")</td>
+                <td class="text-right">@g_EACHrs.ToString("N2")</td>
+
+                <td class="text-right bg-palegreen">@g_OB_COST.ToString("N2")</td>
+                <td class="text-right bg-palegreen">@g_UnApprovedCNCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_ApprovedCNCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_CURRCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_PrevWkCost.ToString("C2")</td>
+                <td class="text-right bg-palegreen disabled-cell1">@g_CurrWkCost.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_ETCCost.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_EAC_Cost.ToString("C2")</td>
+
+                <td class="text-right">
+                    @(g_CURRHRS != 0 ? g_CURRHRS.ToString("C2") : "-")
+                </td>
+                <td class="text-right">
+                    @(g_CURRCOST != 0 ? String.Format("{0:P0}", g_PrevWkHrs / g_CURRHRS) : "-")
+                </td>
+                <td class="text-right">–</td>
+                <td>0</td>
+            </tr>
+            <tr style="background-color:#D9E8F5; height:6px;">
+                <td colspan="21"></td>
+            </tr>
+        }
+    </tbody>
+
+    @{
+        // handy grand totals for % cells
+        var grandOBHrs = Model.vwBudgetActuals.Sum(x => x.OB_HRS);
+        var grandUnApprovedCNHRS = Model.vwBudgetActuals.Sum(x => x.UnApprovedCNHRS);
+        var grandApprovedCNHRS = Model.vwBudgetActuals.Sum(x => x.ApprovedCNHRS);
+        var grandCURRHRS = Model.vwBudgetActuals.Sum(x => x.CURRHRS);
+        var grandPrevWkHrs = Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs);
+        var grandCurrWkHrs = Model.vwBudgetActuals.Sum(x => x.CurrWkHrs);
+        var grandETCHrs = Model.vwBudgetActuals.Sum(x => x.ETC_Hrs);
+        var grandEACHrs = Model.vwBudgetActuals.Sum(x => x.EAC_Hrs);
+
+        var grandOBCost = Model.vwBudgetActuals.Sum(x => x.OB_COST);
+        var grandUnApprovedCNCost = Model.vwBudgetActuals.Sum(x => x.UnApprovedCNCOST);
+        var grandApprovedCNCost = Model.vwBudgetActuals.Sum(x => x.ApprovedCNCOST);
+        var grandCURRCOST = Model.vwBudgetActuals.Sum(x => x.CURRCOST);
+        var grandPrevWkCost = Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost);
+        var grandCurrWkCost = Model.vwBudgetActuals.Sum(x => x.CurrWkCost);
+        var grandETCCost = Model.vwBudgetActuals.Sum(x => x.ETC_Cost);
+        var grandEACCost = Model.vwBudgetActuals.Sum(x => x.EAC_Cost);
+    }
+
+    <tfoot>
+        <tr style="font-weight: bold; background-color: #f5f5f5;">
+            <td>Grand Total</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.OB_HRS).ToString("N2")</td>
+            <td class="text-right col-hours-toggle">@Model.vwBudgetActuals.Sum(x => x.UnApprovedCNHRS).ToString("N2")</td>
+            <td class="text-right col-hours-toggle">@Model.vwBudgetActuals.Sum(x => x.ApprovedCNHRS).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.CURRHRS).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs).ToString("N2")</td>
+            <td class="text-right col-hours disabled-cell1">@Model.vwBudgetActuals.Sum(x => x.CurrWkHrs).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.ETC_Hrs).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.EAC_Hrs).ToString("N2")</td>
+
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.OB_COST).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@Model.vwBudgetActuals.Sum(x => x.UnApprovedCNCOST).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@Model.vwBudgetActuals.Sum(x => x.ApprovedCNCOST).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.CURRCOST).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars disabled-cell1">@Model.vwBudgetActuals.Sum(x => x.CurrWkCost).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.ETC_Cost).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.EAC_Cost).ToString("C2")</td>
+
+
+            <td class="text-right">
+                @if (@Model.vwBudgetActuals.Sum(x => x.CURRHRS) != 0)
+                {
+                    @String.Format("{0:P0}", @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs) / @Model.vwBudgetActuals.Sum(x => x.CURRHRS))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+            <td class="text-right">
+                @if (@Model.vwBudgetActuals.Sum(x => x.CURRCOST) != 0)
+                {
+                    @String.Format("{0:P0}", @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost) / @Model.vwBudgetActuals.Sum(x => x.CURRCOST))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+            <td class="text-right">–</td> <!-- % Complete total typically not meaningful across tasks -->
+@*             <td class="text-right">
+                @if (totalCURRCOST != 0 && totalPrevWkCost != 0)
+                {
+                    @(String.Format("{0:N2}", (totalCURRCOST != 0 ? 1.0m : 0m) / (totalPrevWkCost / totalCURRCOST)))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td> *@
+            <td>0</td>
+        </tr>
+    </tfoot>
+</table>
+
+<!--CHARTS-->
+<button id="exportBtn" class="btn btn-sm btn-success">Export to Excel</button>
+
+<br/>
+
+<div style="display: flex; gap: 20px; margin-bottom: 30px;">
+    <!-- Summary Chart -->
+    <div id="summaryChartContainer" style="flex: 1; height: 300px;">
+        <canvas id="summaryChart"></canvas>
+    </div>
+
+    <!-- Resource Status Chart -->
+    <div id="chartContainer" style="flex: 1;">
+        <div class="form-group" id="filterWrapper" style="margin-bottom: 10px;">
+@*             <select id="groupFilter" class="form-control" style="width: 100px;">
+                <option value="">-- All Groups --</option>
+            </select> *@
+        </div>
+
+        <div id="canvasWrapper" style="height: 300px;">
+            <canvas id="resourceStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@* <div class="d-flex align-items-center mb-2">
+    <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
+    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true" style="width: 700px;" asp-items="Model.JobSelectList"></select>
+</div> *@
+
+@* not sure i want to use this yet *@
+@* <select class="selectpicker form-control" id="eacOption" name="eacOption" data-ng-style="btn-primary">
+    @if (Model.CanUseEACEqualsCAB)
+    {
+        <option value="CAB">EAC = CAB</option>
+    }
+    else
+    {
+        <option value="CAB" disabled data-content="EAC = CAB <span class='text-muted'>(Spend &gt; Budget)</span>">EAC = CAB</option>
+    }
+    @if (Model.CanUseEACEqualsLast)
+    {
+        <option value="LAST">EAC = LAST EAC</option>
+    }
+    else
+    {
+        <option value="LAST" disabled data-content="EAC = LAST EAC <span class='text-muted'>(Spend &gt; EAC)</span>">EAC = LAST EAC</option>
+    }
+    <option value="NEW">NEW EAC</option>
+    <option value="CPI" disabled data-content='EAC by CPI <span class="text-muted">(Not yet available)</span>'>
+        EAC by CPI
+    </option>
+
+</select> *@
+
+<div class="mb-4 p-3 border rounded bg-light">
+    <div class="row align-items-center">
+        <!-- Select All ETCs Button -->
+        <div class="col-md-auto mb-2 mb-md-0">
+            <button type="button" class="btn btn-secondary" id="selectAllEtcBtn">Select All ETCs</button>
+        </div>
+        
+        <!-- New Resource Allocation -->
+        <div class="col-md-auto mb-2 mb-md-0">
+            <button id="newEtcBtn" class="btn btn-primary">New Resource Allocation</button>
+        </div>
+
+        <!-- Shift Dates Form -->
+        <div class="col-md-auto mb-2 mb-md-0">
+            <label class="mb-0 mr-2"><strong>Shift All ETC Dates:</strong></label>
+            <div class="form-inline">
+                <input type="number" id="shiftWeeksInput" class="form-control mr-2" placeholder="Weeks (+/-)" />
+                <button type="button" class="btn btn-primary" id="shiftDatesBtn">Shift Dates</button>
+            </div>
+        </div>
+
+        <!-- Hidden fields for job context -->
+        <input type="hidden" id="currentJobId" value="@Model.thisVWJob.JobID" />
+        <input type="hidden" id="currentRptWeekend"
+               value="@Model.thisVWDiscETC.OrderByDescending(e => e.RptWeekend).Select(e => e.RptWeekend).FirstOrDefault().ToString("yyyy-MM-dd")" />
+
+        <!-- Bulk Edit Button aligned right -->
+        <div class="col text-right">
+            <button type="button" class="btn btn-warning" id="openBulkEditSchedule">Bulk Edit Schedule</button>
+        </div>
+    </div>
+</div>
+
+
+<!--vwDiscETC table data for editing-->
+<div>
+    <table class="table table-sm table-bordered table-compact">
+        <thead>
+            @{
+                var rptWeekend = Model.thisVWDiscETC
+                .OrderByDescending(e => e.RptWeekend)
+                .Select(e => e.RptWeekend)
+                .FirstOrDefault()
+                .ToString("yyyy-MM-dd");
+            }
+            <tr>
+                <td colspan="12"><strong>ETC Beginning: @rptWeekend</strong></td>
+            </tr>
+            <tr>
+                <th>Select</th>
+                <th>Detail</th>
+                <th>Edit</th>
+                <th>Task</th>
+                <th>ETC Hrs</th>
+                <th>ETC Rate</th>
+                <th>ETC Cost</th>
+                <th>Curve</th>
+                <th>Start WE</th>
+                <th>Finish WE</th>
+                <th>Resource Group</th>
+                <th>Employee</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var joined = Model.thisVWDiscETC
+                .Join(Model.vwBudgetActuals,
+                etc => etc.OBID,
+                ba => ba.OBID,
+                (etc, ba) => new
+                {
+                    ETC = etc,
+                    ba.DiscSort,
+                    ba.DiscDesc
+                })
+                .OrderBy(x => x.DiscSort)
+                .GroupBy(x => new { x.DiscSort, x.DiscDesc });
+
+                decimal totalETCHrs = 0;                
+            }
+
+            @foreach (var group in joined)
+            {
+                <tr class="table-primary">
+                    <td colspan="13"><strong>@group.Key.DiscDesc</strong></td>
+                </tr>
+
+                foreach (var item in group)
+                {
+                    totalETCHrs += item.ETC.ETCHrs;
+                    totalETCCost += item.ETC.ETCCost;
+
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="bulk-select-checkbox" value="@item.ETC.DiscEtcID" />
+                        </td>
+                        <td>
+                            <button class="btn btn-info btn-sm show-budget-btn"
+                                    data-obid="@item.ETC.OBID"
+                                    data-empgroupid="@item.ETC.EmpGroupID"
+                                    data-mytask="@item.ETC.myTask">
+                                📊
+                            </button>
+                        </td>
+                        <td>
+                            <a href="javascript:void(0);" class="btn btn-sm btn-success edit-etc-btn"
+                               data-discetcid="@item.ETC.DiscEtcID"
+                               data-obid="@item.ETC.OBID"
+                               data-etchrs="@item.ETC.ETCHrs"
+                               data-etccost="@item.ETC.ETCCost"
+                               data-etccomment="@item.ETC.ETCComment"
+                               data-planstart="@item.ETC.PlanStartWE.ToString("yyyy-MM-dd")"
+                               data-planfinish="@item.ETC.PlanFinishWE.ToString("yyyy-MM-dd")"
+                               data-curveid="@item.ETC.CurveID"
+                               data-empgroupid="@item.ETC.EmpGroupID"
+                               data-etcrate="@item.ETC.ETCRate"
+                               data-etcratetypeid="@item.ETC.ETCRateTypeID"
+                               data-empid="@item.ETC.EmpID">
+                                Edit
+                            </a>
+                        </td>
+                        <td style="color:@(item.ETC.MapChk == 1 ? "red" : "inherit")">
+                            @item.ETC.myTask
+                        </td>
+                        <td class="text-right">@item.ETC.ETCHrs.ToString("N2")</td>
+                        <td class="text-right">@item.ETC.ETCRate.ToString("C2")</td>
+                        <td class="text-right">@item.ETC.ETCCost.ToString("C2")</td>
+                        <td>@item.ETC.CurveName</td>
+                        <td>@item.ETC.PlanStartWE.ToString("yyyy-MM-dd")</td>
+                        <td>@item.ETC.PlanFinishWE.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @(@Model.ListEmpGroupResources
+                                .FirstOrDefault(g => g.EmpGroupID == item.ETC.EmpGroupID)?.EmpResGroupDesc ?? "(Unknown)")
+                        </td>
+                        <td>
+                            @(@Model.ListEmpGroupResources
+                                .FirstOrDefault(g => g.EmpID == item.ETC.EmpID)?.EmpName ?? "(Unknown)")
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm delete-etc-btn"
+                                    data-discetcid="@item.ETC.DiscEtcID">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <tr class="table-success">
+                <td colspan="4"><strong>Total</strong></td>
+                <td class="text-right"><strong>@totalETCHrs.ToString("0.00")</strong></td>
+                <td></td>
+                <td class="text-right"><strong>@totalETCCost.ToString("C2")</strong></td>
+                <td colspan="6"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<br />
+
+<!--form entry for vwDiscETC-->
+<div id="etcModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="etcModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content p-4">
+            <div class="modal-header">
+                <h4 class="modal-title" id="etcModalLabel">Edit ETC Record</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <form id="etcForm">
+                <input type="hidden" id="discEtcId" name="DiscEtcID" />
+                <input type="hidden" id="rptWeekend" name="RptWeekend" value="@ReportWE.GetReportWE().ToString("yyyy-MM-dd")" />
+
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Task Info -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Task Info</legend>
+
+                                <div class="form-group">
+                                    <label for="obid">Task</label>
+                                    <select class="form-control" id="obid" name="OBID" required>
+                                        <option value="">-- Select Task --</option>
+            @foreach (var task in Model.vwBudgetActuals)
+            {
+                                            <option value="@task.OBID">@task.MYTASK</option>
+            }
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="etccomment">ETC Comment</label>
+                                    <textarea class="form-control" id="etccomment" name="ETCComment"></textarea>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- Hrs/Cost -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Hrs/Cost</legend>
+
+                                <div class="form-group">
+                                    <label for="empGroupId">Resource Group</label>
+                                    <select class="form-control" id="empGroupId" name="EmpGroupID" required>
+                                        <option value="">-- Select Group --</option>
+            @foreach (var group in Model.ListResourceGroups)
+            {
+                                            <option value="@group.EmpGroupID">@group.EmpGroup</option>
+            }
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="empId">Employee (Optional)</label>
+                                    <select class="form-control" id="empId" name="EmpID">
+                                        <option value="">-- Optional --</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="etchrs">ETC Hours</label>
+                                    <input type="number" class="form-control text-right" id="etchrs" name="ETCHrs" required step="0.01" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="rateSelect">ETC Rate Source</label>
+                                    <select class="form-control" id="rateSelect">
+                                        <option value="">-- Select Rate Type --</option>
+                                        <option value="currrate">Current Rate</option>
+                                        <option value="actrate">Actual Rate</option>
+                                        <option value="other">Other (manual)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="manualRateGroup">
+                                    <label for="etcrate">ETC Rate <small>(<span id="rateDisplay">--</span>)</small></label>
+                                    <input type="number" class="form-control text-right" id="etcrate" name="ETCRate" required step="0.01" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="etccost">ETC Cost</label>
+                                    <input type="number" class="form-control text-right" id="etccost" name="ETCCost" required step="0.01" />
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- Schedule -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Schedule</legend>
+
+                                <div class="form-group">
+                                    <label for="planstart">Planned Start Week Ending</label>
+                                    <input type="date" class="form-control" id="planstart" name="PlanStartWE" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="planfinish">Planned Finish Week Ending</label>
+                                    <input type="date" class="form-control" id="planfinish" name="PlanFinishWE" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="curveId">Curve Type</label>
+                                    <select id="curveId" name="CurveID" class="form-control">
+                                        <option value="">-- Select Curve --</option>
+            @foreach (var curve in Model.ListCurves)
+            {
+                                            <option value="@curve.CurveID">@curve.CurveName</option>
+            }
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Submit</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!--modal budget and remaining hrs-->
+<div class="modal fade" id="budgetModal" tabindex="-1" role="dialog" aria-labelledby="budgetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Budget Summary</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Budget Hrs:</strong> <span id="budgetHrs"></span></p>
+                <p><strong>Spent Hrs:</strong> <span id="spentHrs"></span></p>
+                <p><strong>Remaining Hrs:</strong> <span id="remainingHrs"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" asp-page-handler="UpdateThisJobFcast">
+    <input type="hidden" name="JobId" value="@Model.JobId" />
+    <button type="submit" class="btn btn-danger" @(Model.JobId.HasValue ? "" : "disabled")>
+        @(Model.JobId.HasValue
+                ? $"Update ETC for Job {Model.JobId} against last actuals"
+                : "Update ETC — No job selected")
+    </button>
+</form>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+
+    
+    @{
+        var spreadData = Model.SpreadData?.Any() == true ? Model.SpreadData : new List<ETCSpreadChartDto>();
+        var allEmpData = Model.ListEmpGroupResources?.Any() == true ? Model.ListEmpGroupResources : new List<vwEmpGroupResources>();
+        var budgetData = Model.vwBudgetActuals?.Any() == true ? Model.vwBudgetActuals : new List<vwBudgetActuals_REVISED>();
+        var summaryData = Model.SummaryPoints?.Any() == true ? Model.SummaryPoints : new List<ProjectPano.Pages.ETC.Index1Model.ChartSummaryPoint>();
+
+        var spreadDataJson = JsonSerializer.Serialize(spreadData);
+        var allEmpDataJson = JsonSerializer.Serialize(allEmpData);
+        var budgetActualsJson = JsonSerializer.Serialize(budgetData);
+        var summaryJson = JsonSerializer.Serialize(summaryData);
+    }
+
+
+    <script>
+        
+        //debugging 
+        // const spreadData = @Html.Raw(spreadDataJson);
+        // const allEmpData = @Html.Raw(allEmpDataJson);
+        // const budgetActuals = @Html.Raw(budgetActualsJson);
+        // const summaryPoints = @Html.Raw(summaryJson);
+
+        console.log('spreadData:', spreadData);
+        console.log('summaryPoints:', summaryPoints);
+        
+        // Global JS variables from server model
+        var spreadData = @Html.Raw(spreadDataJson);
+        var allEmpData = @Html.Raw(allEmpDataJson);
+        var budgetActuals = @Html.Raw(budgetActualsJson);
+        var summaryPoints=@Html.Raw(summaryJson);
+
+        console.log(`Spread JSON size: ${(new Blob([JSON.stringify(spreadData)]).size / 1024).toFixed(1)} KB`);
+
+        function getNextSaturday(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+            const daysUntilSaturday = (6 - day + 7) % 7;
+            date.setDate(date.getDate() + daysUntilSaturday);
+
+            // Format YYYY-MM-DD local
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        $(document).ready(function () {
+                // Show/hide manual rate field based on type
+                //toggleManualRateGroup($('#rateSelect').val());
+                    function toggleManualRateGroup(selectedValue) {
+                        if (selectedValue === 'other') {
+                        $('#manualRateGroup').show();
+                        $('#etcrate').prop('readonly', false);
+                    } else {
+                        $('#manualRateGroup').hide();
+                        $('#etcrate').prop('readonly', true);
+                    }
+                }
+
+            $('.selectpicker').selectpicker();
+
+            // Job dropdown change triggers reload with jobId query param
+            $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                const selectedJobId = $(this).val();
+
+                if (selectedJobId) {
+                    window.location.href = `/ETC/Index1?jobId=${selectedJobId}`;
+                }
+            });
+
+            // Filter employees by EmpGroupID
+            $('#empGroupId').on('change', function () {
+                const selectedGroupId = parseInt($(this).val());
+                const filteredEmps = allEmpData.filter(e => e.EmpGroupID === selectedGroupId);
+
+                const $empDropdown = $('#empId');
+                $empDropdown.empty().append('<option value="">-- Optional --</option>');
+
+                filteredEmps.forEach(emp => {
+                    $empDropdown.append(`<option value="${emp.EmpID}">${emp.EmpName}</option>`);
+                });
+            });
+
+            //select all checkbox
+            document.getElementById("selectAllEtcBtn").addEventListener("click", function () {
+                const checkboxes = document.querySelectorAll(".bulk-select-checkbox");
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                checkboxes.forEach(cb => cb.checked = !allChecked);
+                this.textContent = allChecked ? "Select All ETCs" : "Unselect All ETCs";
+            });
+
+            //bulk schedule update
+            document.getElementById("openBulkEditSchedule").addEventListener("click", function () {
+                const selectedIds = Array.from(document.querySelectorAll(".bulk-select-checkbox:checked"))
+                    .map(cb => cb.value);
+
+                if (selectedIds.length === 0) {
+                    alert("Please select at least one ETC row.");
+                    return;
+                }
+
+                // Clear required attributes on non-schedule fields
+                ["obid", "empGroupId", "etchrs", "etcrate", "etccost"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.removeAttribute("required");
+                });
+
+                // Set modal to bulk-edit mode
+                document.getElementById("etcModalLabel").innerText = "Bulk Edit Schedule";
+                document.getElementById("discEtcId").value = ""; // Clear single ID
+                document.getElementById("etcForm").dataset.bulkIds = selectedIds.join(",");
+
+                // Hide unrelated fields (task info + hrs/cost)
+                document.querySelectorAll("#etcForm .col-md-4").forEach(section => {
+                    if (!section.querySelector("legend").innerText.includes("Schedule")) {
+                        section.style.display = "none";
+                    }
+                });
+
+                // Clear existing schedule values
+                document.getElementById("planstart").value = "";
+                document.getElementById("planfinish").value = "";
+                document.getElementById("curveId").value = "";
+
+                $('#etcModal').modal('show');
+            });
+
+            document.getElementById("etcForm").addEventListener("submit", async function (e) {
+                e.preventDefault();
+
+                const form = e.target;
+                const bulkIds = form.dataset.bulkIds?.split(",") || [];
+                const formData = new FormData(form);
+                const scheduleData = {
+                    DiscEtcIDs: bulkIds,
+                    PlanStartWE: formData.get("PlanStartWE"),
+                    PlanFinishWE: formData.get("PlanFinishWE"),
+                    CurveID: formData.get("CurveID")
+                };
+
+                const response = await fetch('/ETC/Index1?handler=BulkSchedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scheduleData)
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Bulk schedule update failed.");
+                }
+            });
+
+            //schedule shift
+            document.getElementById("shiftDatesBtn").addEventListener("click", function () {
+                const weeks = parseInt(document.getElementById("shiftWeeksInput").value);
+                const jobId = parseInt(document.getElementById("currentJobId").value);
+                const rptWeekend = document.getElementById("currentRptWeekend").value;
+
+                if (isNaN(weeks) || weeks === 0) {
+                    alert("Please enter a non-zero number of weeks.");
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to shift ALL ETC Start/Finish dates for this job by ${weeks} week(s)?`)) return;
+
+                fetch('/ETC/index1?handler=ShiftDatesByWeeks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({
+                        weeks: weeks,
+                        jobId: jobId,
+                        rptWeekend: rptWeekend
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert("Dates shifted successfully.");
+                        location.reload();
+                    } else {
+                        alert("Shift failed: " + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("An error occurred while shifting dates.");
+                });
+            });
+            
+            //etc rate calc
+            function updateRateFromSelection() {
+                const selectedRateType = $('#rateSelect').val();
+                const selectedObid = parseInt($('#obid').val());
+
+                const match = budgetActuals.find(t => parseInt(t.OBID) === selectedObid);
+                let rateVal = null;
+
+                if (selectedRateType === 'currrate' && match && match.CurrRate != null) {
+                    rateVal = match.CurrRate;
+                    $('#etcrate').val(rateVal.toFixed(2));
+                    $('#rateDisplay').text(rateVal.toFixed(2));
+                    $('#manualRateGroup').removeClass('d-none');
+                } else if (selectedRateType === 'actrate' && match && match.ActRate != null) {
+                    rateVal = match.ActRate;
+                    $('#etcrate').val(rateVal.toFixed(2));
+                    $('#rateDisplay').text(rateVal.toFixed(2));
+                    $('#manualRateGroup').removeClass('d-none');
+                } else if (selectedRateType === 'other') {
+                    // Don't overwrite existing value — just show the field
+                    $('#rateDisplay').text('(manual entry)');
+                    $('#manualRateGroup').removeClass('d-none');
+                } else {
+                    $('#etcrate').val('');
+                    $('#rateDisplay').text('--');
+                    $('#manualRateGroup').addClass('d-none');
+                }
+
+                // ✅ Only recalculate cost if we changed the rate
+                if (rateVal !== null) {
+                    updateEtcCost();
+                }
+
+                console.log("Rate selected:", selectedRateType);
+                console.log("CURRRATE:", match?.CurrRate);
+                console.log("ACTRATE:", match?.ActRate);
+
+            }
+
+                // Attach handlers
+                $('#rateSelect').on('change', updateRateFromSelection);
+                $('#obid').on('change', updateRateFromSelection);
+            
+            //update etc cost
+            function updateEtcCost() {
+                const hrs = parseFloat($('#etchrs').val()) || 0;
+                const rate = parseFloat($('#etcrate').val()) || 0;
+                const cost = hrs * rate;
+                $('#etccost').val(cost.toFixed(2));
+            }
+            $('#etchrs, #rateSelect, #etcrate').on('input change', updateEtcCost);
+
+            //new button handler
+            $('#newEtcBtn').on('click', function () {
+                // Clear all form fields or set defaults
+                $('#discEtcId').val(0); // or "" if you prefer
+                $('#obid').val('');
+                $('#etchrs').val('');
+                $('#etcrate').val('');
+                $('#etccost').val('');
+                $('#etccomment').val('');
+                $('#planstart').val('');
+                $('#planfinish').val('');
+                $('#curveId').val('');
+                $('#empGroupId').val('').trigger('change');
+                $('#empId').val('');
+
+                // Show modal
+                $('#etcModal').modal('show');
+            });
+
+
+            // Edit button handler
+            $('.edit-etc-btn').on('click', function () {
+                const $btn = $(this);
+
+                $('#etcForm')[0].reset(); // Resets the form
+                $('#empId').empty().append('<option value="">-- Optional --</option>'); // Reset employee dropdown
+
+
+                $('#discEtcId').val($btn.data('discetcid'));
+                $('#obid').val($btn.data('obid'));
+                $('#etchrs').val($btn.data('etchrs'));
+                $('#etcrate').val($btn.data('etcrate'));
+                $('#etccost').val($btn.data('etccost'));
+                $('#etccomment').val($btn.data('etccomment'));
+                $('#planstart').val($btn.data('planstart'));
+                $('#planfinish').val($btn.data('planfinish'));
+                $('#curveId').val($btn.data('curveid'));
+                $('#empGroupId').val($btn.data('empgroupid')).trigger('change');
+
+                setTimeout(() => {
+                    $('#empId').val($btn.data('empid'));
+                }, 200);
+
+                // ✅ Set ETCRateType dropdown
+                const rateTypeId = $btn.data('etcratetypeid');
+                switch (rateTypeId) {
+                    case 1:
+                        $('#rateSelect').val('currrate');
+                        break;
+                    case 2:
+                        $('#rateSelect').val('actrate');
+                        break;
+                    case 3:
+                        $('#rateSelect').val('other');
+                        break;
+                    default:
+                        $('#rateSelect').val('');
+                }
+
+                // Update rate display (optional)
+                $('#rateDisplay').text(parseFloat($btn.data('etcrate')).toFixed(2));
+
+                // // Show/hide manual rate field based on type
+                // //toggleManualRateGroup($('#rateSelect').val());
+                //     function toggleManualRateGroup(selectedValue) {
+                //         if (selectedValue === 'other') {
+                //         $('#manualRateGroup').show();
+                //         $('#etcrate').prop('readonly', false);
+                //     } else {
+                //         $('#manualRateGroup').hide();
+                //         $('#etcrate').prop('readonly', true);
+                //     }
+                // }
+
+
+                $('#etcModal').modal('show');
+
+                //$('#etcFormContainer').removeClass('d-none');
+                //window.scrollTo({ top: document.getElementById("etcForm").offsetTop - 60, behavior: 'smooth' });
+            });
+
+            // Form submit handler
+        
+            $('#etcForm').on('submit', function (e) {
+                if (this.dataset.bulkIds && this.dataset.bulkIds.length > 0) {
+                return; // Bulk mode active — let bulk handler process it
+                }
+
+                e.preventDefault();
+
+                const formData = {
+                    DiscEtcID: parseInt($('#discEtcId').val()) || 0,
+                    OBID: parseInt($('#obid').val()),
+                    ETCHrs: parseFloat($('#etchrs').val()),
+                    ETCRate: parseFloat($('#etcrate').val()),
+                    ETCCost: parseFloat($('#etccost').val()),
+                    ETCComment: $('#etccomment').val(),
+                    PlanStartWE: getNextSaturday($('#planstart').val()),
+                    PlanFinishWE: getNextSaturday($('#planfinish').val()),
+                    EmpGroupID: parseInt($('#empGroupId').val()),
+                    EmpID: parseInt($('#empId').val()) || null,
+                    RptWeekend: $('#rptWeekend').val(),
+                    JobID: @Model.thisVWJob.JobID,
+                    CurveID: parseInt($('#curveId').val())
+                };
+
+                fetch('/ETC/Index1?handler=AddSingleETC', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                }).then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('ETC saved successfully!');
+                        $('#etcModal').modal('hide');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 200);
+                    } else {
+                        alert('Failed to save ETC.');
+                    }
+                });
+            });
+
+
+            // Add Initial ETCs button
+            $('#addInitialEtcBtn').on('click', function () {
+                const jobId = $('#jobDropdown').val();
+                if (!jobId) {
+                    alert('Please select a job first.');
+                    return;
+                }
+
+                fetch('/ETC/Index1?handler=AddInitialETC', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobId: jobId })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Initial ETC records added.');
+                        location.reload();
+                    } else {
+                        alert('Failed to add ETC records.');
+                    }
+                });
+            });
+
+            // Add New ETC button
+            $('#addNewEtcBtn').on('click', function () {
+                $('#etcForm')[0].reset();
+                $('#discEtcId').val(0);
+                $('#empId').empty().append('<option value="">-- Optional --</option>');
+                $('#planstart').val('');
+                $('#planfinish').val('');
+                $('#etcFormContainer').removeClass('d-none');
+                window.scrollTo({ top: document.getElementById("etcForm").offsetTop - 60, behavior: 'smooth' });
+            });
+
+            // Delete ETC button
+            $('.delete-etc-btn').on('click', function () {
+                const discEtcId = $(this).data('discetcid');
+
+                if (confirm('Are you sure you want to delete this ETC?')) {
+                    fetch('/ETC/Index1?handler=DeleteETC', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(discEtcId)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert('ETC deleted successfully.');
+                            location.reload();
+                        } else {
+                            alert('Delete failed: ' + (result.message || 'Unknown error'));
+                        }
+                    });
+                }
+            });
+
+            $('#cancelEtcBtn').on('click', function () {
+                $('#etcFormContainer').addClass('d-none');
+            });
+
+            // Show budget modal handler
+            $(".show-budget-btn").on("click", function () {
+                const obid = $(this).data("obid");
+                const empGroupId = $(this).data("empgroupid");
+                const myTask = $(this).data("mytask");
+
+                const match = budgetActuals.find(b => b.OBID === obid);
+                const group = allEmpData.find(g => g.EmpGroupID === empGroupId);
+
+                const groupDesc = group?.EmpResGroupDesc || "(Unknown)";
+                $(".modal-title").html(`Budget Summary<br><small>${myTask}</small>`);
+
+                if (match) {
+                    const budgetHrs = match.CURRHRS || 0;
+                    const spentHrs = match.BILLQTY || 0;
+                    const remaining = budgetHrs - spentHrs;
+
+                    $("#budgetHrs").text(budgetHrs.toFixed(2));
+                    $("#spentHrs").text(spentHrs.toFixed(2));
+                    $("#remainingHrs").text(remaining.toFixed(2));
+                } else {
+                    $("#budgetHrs").text("N/A");
+                    $("#spentHrs").text("N/A");
+                    $("#remainingHrs").text("N/A");
+                }
+
+                $("#budgetModal").modal("show");
+            });
+
+            // Chart setup
+        if (spreadData && spreadData.length > 0) {
+
+            // Group data by EmpResGroupDesc
+            const groupedData = {};
+            spreadData.forEach(item => {
+                const group = item.EmpResGroupDesc || "(Unknown)";
+                if (!groupedData[group]) {
+                    groupedData[group] = [];
+                }
+                groupedData[group].push(item);
+            });
+
+            // Color mapping for groups
+            function getColorFromGroup(group) {
+                const colorMap = {
+                    "PM": "rgba(255, 99, 132, 0.7)",
+                    "EIC Engr & Design": "rgba(54, 162, 235, 0.7)",
+                    "Mechanical Design": "rgba(255, 206, 86, 0.7)",
+                    "Engineering": "rgba(75, 192, 192, 0.7)"
+                };
+                return colorMap[group] || "rgba(0, 0, 0, 0.4)"; // fallback
+            }
+
+            // 1. Get all unique weeks from the entire data (across groups)
+            const allWeeks = Array.from(
+                new Set(Object.values(groupedData).flatMap(items => items.map(d => d.WeekEnding)))
+            ).sort((a, b) => new Date(a) - new Date(b));
+
+            // 2. Build datasets with zero-padding for missing weeks
+            const chartDatasets = [];
+
+            Object.entries(groupedData).forEach(([groupName, items]) => {
+                // Map weeks to SpreadHrs for quick lookup
+                const weekToHours = {};
+                items.forEach(d => {
+                    weekToHours[d.WeekEnding] = d.SpreadHrs;
+                });
+
+                // Build full data array for all weeks, fill missing with zero
+                const data = allWeeks.map(week => ({
+                    x: week,
+                    y: weekToHours[week] ?? 0
+                }));
+
+                chartDatasets.push({
+                    label: groupName,
+                    backgroundColor: getColorFromGroup(groupName),
+                    borderColor: 'rgba(0,0,0,0.2)',
+                    data,
+                    fill: false,
+                    borderWidth: 1,
+                    pointRadius: 3
+                });
+            });
+
+
+            const weekDates = spreadData.map(d => new Date(d.WeekEnding));
+            weekDates.sort((a, b) => a - b);
+            const minDate = weekDates[0].toISOString();
+            const maxDate = weekDates[weekDates.length - 1].toISOString();
+
+            // Create chart
+            const ctx = document.getElementById('resourceStatusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: chartDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout:{
+                        padding:5
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y'
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            type: 'time',
+                            min:minDate,
+                            max:maxDate,
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MMM dd, yyyy',
+                                displayFormats: {
+                                    week: 'MMM dd' // Custom tick format
+                                }
+                            },
+                            ticks: {
+                                source:'data',
+                                callback: function (value) {
+                                    const date = new Date(value);
+                                    return `${date.getMonth() + 1}/${date.getDate()}`; // MM/DD
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Week Ending'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Hours' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+
+            //summary chart
+
+            if (summaryPoints && summaryPoints.length > 0) {
+            const summaryCtx = document.getElementById('summaryChart').getContext('2d');
+
+            const labels = summaryPoints.map(p => p.WeekEnding);
+
+            //utc date stuff
+            function toUtcMidday(DateStr) {
+                const d = new Date(DateStr);
+                return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12)); // 12:00 noon UTC
+            }
+
+
+            // 1. Reuse allWeeks from the main chart to ensure axis alignment
+            const summaryDatasets = [];
+
+            // 2. Map week → summary values
+            const weekToSummary = {};
+            summaryPoints.forEach(p => {
+                weekToSummary[p.WeekEnding] = {
+                    BillwithAdminDisc: p.BillwithAdminDisc,
+                    CURRENTCOST: p.CURRENTCOST
+                };
+            });
+
+            // 3. Build padded arrays for all weeks
+            const summBarData = [];
+            const summRedLineData = [];
+            const summGreenCumulative = [];
+
+            let runningTotal = 0;
+            let lastKnownCurrentCost=0;
+
+
+                 allWeeks.forEach(week => {
+                    //const summary = weekToSummary[week] || { BillwithAdminDisc: 0, CURRENTCOST: 0 };
+                    const summary=weekToSummary[week];
+
+                    const utcMid = toUtcMidday(week); // ✅ Use 12:00 UTC to avoid timezone shifting
+                    
+                    const billWithAdmin=summary?.BillwithAdminDisc ?? 0;
+                    const currentCost=summary?.CURRENTCOST ?? lastKnownCurrentCost;
+
+                    lastKnownCurrentCost=currentCost;
+                    runningTotal +=billWithAdmin;
+
+                    summBarData.push({ x: utcMid, y: billWithAdmin });
+                    summRedLineData.push({ x: utcMid, y: currentCost }); // 🔴 keep plotting last known budget
+                    summGreenCumulative.push({ x: utcMid, y: runningTotal });
+                });
+
+
+
+            // 4. Create datasets array
+            const summaryChartDatasets = [
+                {
+                    label: 'Wkly Spend - Labor & Expense',
+                    type: 'bar',
+                    backgroundColor: "rgba(144, 238, 144, 0.7)",
+                    data: summBarData,
+                    yAxisID: 'y1',
+                    //barPercentage:1.0,
+                    //categoryPercentage:.06
+                },
+                {
+                    label: 'Current Approved Budget',
+                    type: 'line',
+                    borderColor: 'red',
+                    backgroundColor: 'red',
+                    fill: false,
+                    data: summRedLineData,
+                    yAxisID: 'y2',
+                    tension: 0.3
+                },
+                {
+                    label: 'Cumulative Spend',
+                    type: 'line',
+                    borderColor: 'green',
+                    backgroundColor: 'green',
+                    fill: false,
+                    data: summGreenCumulative,
+                    yAxisID: 'y2',
+                    tension: 0.3
+                }
+            ];
+
+            console.log("allWeeks:", allWeeks);
+            console.log("summBarData:", summBarData);
+            console.log("summaryPoints:", summaryPoints);
+
+            new Chart(summaryCtx, {
+                type: 'bar',
+                data: {
+                    datasets:summaryChartDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    parsing:{
+                        xAxisKey:'x',
+                        yAxisKey:'y'
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            min:minDate,
+                            max:maxDate,
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MMM dd',
+                                displayFormats: { week: 'MMM dd' }
+                            },
+                            ticks:{
+                                source:'data',
+                                callback:function(value) {
+                                    const date=new Date(value);
+                                    console.log("tick value raw:",value," parsed:", date.toISOString());
+                                    // const utcFormatter=new Intl.DateTimeFormat('en-US', {
+                                    //     timeZone:'UTC',
+                                    //     month:'numeric',
+                                    //     day:'numeric'
+                                    // });
+                                    return `${date.getMonth() + 1}/${date.getDate()}`; // MM/DD
+                                    // return utcFormatter.format(date);
+                                }
+                            },
+                            title: { display: true, text: 'Week Ending' }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Wkly Cost' },
+                            position: 'left'
+                        },
+                        y2: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cumul Cost' },
+                            position: 'right'
+                        },
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+
+        } //end of summary chart
+
+        //get chart data hrs
+            document.getElementById('exportBtn').addEventListener('click', function () {
+            // Prepare data matrix
+            const headerRow = ['Week Ending', ...chartDatasets.map(ds => ds.label)];
+            const weekSet = new Set();
+
+            chartDatasets.forEach(ds => {
+                ds.data.forEach(point => weekSet.add(point.x));
+            });
+
+            const sortedWeeks = Array.from(weekSet).sort((a, b) => new Date(a) - new Date(b));
+
+            const dataRows = sortedWeeks.map(week => {
+                const row = [week];
+                chartDatasets.forEach(ds => {
+                    const found = ds.data.find(p => p.x === week);
+                    row.push(found ? found.y : 0);
+                });
+                return row;
+            });
+
+            const worksheetData = [headerRow, ...dataRows];
+            //debug
+            const totalsRow = ['Total'];
+            chartDatasets.forEach(ds => {
+                const total = ds.data.reduce((sum, pt) => sum + pt.y, 0);
+                totalsRow.push(total.toFixed(1));
+            });
+            worksheetData.push([]);
+            worksheetData.push(totalsRow);
+
+            // Create worksheet and workbook
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'ChartData');
+
+            // Trigger download
+            XLSX.writeFile(workbook, 'ResourceSpreadData.xlsx');
+        });
+    }
+});
+    </script>
+}

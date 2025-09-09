@@ -1,0 +1,334 @@
+﻿@page
+@using System.Linq
+@using System.Text.Json
+@using ProjectPano
+@using static ProjectPano.Model.DAL
+@model ProjectPano.Pages.CombJobsSep.CombJobsSepModel
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "Combined Jobs - E&D + Ops, Shown Separately";
+}
+<a href="/CombinedJobs/Index">Back</a> |
+<br />
+<br />
+
+<h5 class="custom-h1">Combined Jobs - E&D + Ops, Shown Separately</h5>
+
+<div class="d-flex align-items-center mb-2">
+    <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
+    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true"
+            style="width: 700px;" asp-for="JobGp1Id" asp-items="Model.JobSelectList">
+        <option value="">--Select Job --</option>
+        </select>
+</div>
+
+<!--COST REPORT TABLE-->
+<table class="table table-hover table-bordered table-compact">
+    <thead>
+        <!-- Group Header Row -->
+        <tr class="custom-header-costrpt2">
+            <th></th>
+            <th colspan="8" class="text-center colgroup-hours">
+                Hours
+            </th>
+            <th colspan="8" class="text-center colgroup-dollars">
+                Dollars
+            </th>
+            <th colspan="3" class="text-center">Percentages</th>
+            <th></th>
+        </tr>
+
+        <tr class="custom-header-costrpt2">
+            <th></th>
+            <th class="align-middle text-center">A</th>
+            <th class="align-middle text-center">B</th>
+            <th class="align-middle text-center">C</th>
+            <th class="align-middle text-center">D= <br />A+B+C</th>
+            <th class="align-middle text-center">E</th>
+            <th class="align-middle text-center disabled-cell1">F<br /> Info Only </th>
+            <th class="align-middle text-center">G</th>
+            <th class="align-middle text-center">H = <br /> E+G</th>
+
+            <th class="align-middle text-center">I</th>
+            <th class="align-middle text-center">J</th>
+            <th class="align-middle text-center">K</th>
+            <th class="align-middle text-center">L= <br />I+J+K</th>
+            <th class="align-middle text-center">M</th>
+            <th class="align-middle text-center disabled-cell1">N<br /> Info Only </th>
+            <th class="align-middle text-center">O</th>
+            <th class="align-middle text-center">P = <br /> M+O</th>
+
+            <th class="align-middle text-center">Q = <br /> E/D</th>
+            <th class="align-middle text-center">R = <br /> M/L</th>
+            <th class="align-middle text-center">S</th>
+            <th class="align-middle text-center">T = <br /> S/R</th>
+        </tr>
+
+        <tr class="custom-header-costrpt3">
+            <th>Charge Code</th>
+
+            <!-- HOURS -->
+            <th class="align-top col-hours text-center">Orig</th>
+            <th class="align-top col-hours-toggle text-center">Pending<br />Change</th>
+            <th class="align-top col-hours-toggle text-center">Approved<br />Change</th>
+            <th class="align-top col-hours text-center">Current<br />Approved</th>
+            @*          <th class="align-top col-hours text-center">Cumul<br />Spent Thru <br/>Prev Week</th>
+            <th class="align-top col-hours text-center disabled-cell1">Curr<br />Week <br />Spent</th> *@
+            <th class="align-top col-hours text-center">
+                Cumul<br />Spent Thru <br />@(Model.PrevWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center disabled-cell1">
+                Spent  <br />Wk End<br />@(Model.CurrWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center">ETC</th>
+            <th class="align-top col-hours text-center">EAC</th>
+
+            <!-- DOLLARS -->
+            <th class="align-top col-dollars text-center">Orig</th>
+            <th class="align-top col-dollars-toggle text-center">Pending<br />Change</th>
+            <th class="align-top col-dollars-toggle text-center">Approved<br />Change</th>
+            <th class="align-top col-dollars text-center" ">Current<br />Approved</th>
+            <th class="align-top col-hours text-center">
+                Cumul<br />Spent Thru <br />@(Model.PrevWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-hours text-center disabled-cell1">
+                Spent  <br />Wk End<br />@(Model.CurrWeekEnding.ToString("dd-MMM-yy"))
+            </th>
+            <th class="align-top col-dollars text-center">ETC</th>
+            <th class="align-top col-dollars text-center">EAC</th>
+
+            <th class="align-top text-center">% Hrs<br />Spent</th>
+            <th class="align-top text-center">% $<br />Spent</th>
+            <th class="align-top text-center">% <br /> Complete</th>
+            <th class="align-middle text-center">CPI</th>
+        </tr>
+    </thead>
+    @{
+        decimal totalOB_HRS = 0, totalUnApprovedCNHRS = 0, totalApprovedCNHRS = 0, totalCURRHRS = 0;
+        decimal totalPrevWkHrs = 0, totalEACHrs = 0, totalETCHrsCR = 0, totalCurrWkHrs = 0;
+
+        decimal totalOB_COST = 0, totalUnApprovedCNCOST = 0, totalApprovedCNCOST = 0;
+        decimal totalCURRCOST = 0, totalPrevWkCost = 0, totalEAC_Cost = 0, totalETCCost = 0, totalCurrWkCost = 0;
+    }
+
+    <tbody>
+        @foreach (var job in Model.JobGroups)
+        {
+            <!-- Job Header -->
+            <tr style="background-color:#cde6f7; font-weight:bold;">
+                <td colspan="21">@job.JobName</td>
+            </tr>
+
+            @foreach (var dg in job.DiscGroups)
+            {
+                <!-- DiscGroup Header -->
+                <tr style="background-color:#eee; font-weight:bold;">
+                    <td colspan="21">@dg.DiscGroupName</td>
+                </tr>
+
+                @foreach (var item in dg.Items)
+                {
+                    <!-- detail row -->
+                    <tr>
+                        <td style="padding-left: 10px;">@item.MYTASK</td>
+                        <td class="text-right">@item.OB_HRS.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.UnApprovedCNHRS.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.ApprovedCNHRS.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.CURRHRS.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.PrevWkCumulHrs.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right disabled-cell1">@item.CurrWkHrs.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.ETC_Hrs.GetValueOrDefault().ToString("N2")</td>
+                        <td class="text-right">@item.EAC_Hrs.GetValueOrDefault().ToString("N2")</td>
+
+                        <td class="text-right bg-palegreen">@item.OB_COST.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.UnApprovedCNCOST.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.ApprovedCNCOST.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.CURRCOST.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.PrevWkCumulCost.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen disabled-cell1">@item.CurrWkCost.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.ETC_Cost.GetValueOrDefault().ToString("C2")</td>
+                        <td class="text-right bg-palegreen">@item.EAC_Cost.GetValueOrDefault().ToString("C2")</td>
+
+                        <td class="text-right">
+                            @(item.CURRHRS != 0 ? String.Format("{0:P0}", item.PrevWkCumulHrs / item.CURRHRS) : "-")
+                        </td>
+                        <td class="text-right">
+                            @(item.CURRCOST != 0 ? String.Format("{0:P0}", item.PrevWkCumulCost / item.CURRCOST) : "-")
+                        </td>
+                        <td class="text-right">–</td>
+                        <td>0</td>
+                    </tr>
+                }
+
+                <!-- DiscGroup Subtotal -->
+                <tr style="font-weight:bold; background-color:#f9f9f9;">
+                    <td><i>Subtotal @dg.DiscGroupName</i></td>
+                    <td class="text-right">@dg.Total_OB_HRS.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_UnApprovedCNHRS.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_ApprovedCNHRS.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_CURRHRS.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_PrevWkCumulHrs.ToString("N2")</td>
+                    <td class="text-right disabled-cell1">@dg.Total_CurrWkHrs.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_ETC_HRS.ToString("N2")</td>
+                    <td class="text-right">@dg.Total_EAC_Hrs.ToString("N2")</td>
+
+                    <td class="text-right bg-palegreen">@dg.Total_OB_COST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_UnApprovedCNCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_ApprovedCNCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_CURRCOST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_PrevWkCumulCost.ToString("C2")</td>
+                    <td class="text-right bg-palegreen disabled-cell1">@dg.Total_CurrWkCost.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_ETC_COST.ToString("C2")</td>
+                    <td class="text-right bg-palegreen">@dg.Total_EAC_Cost.ToString("C2")</td>
+
+                    <td class="text-right">
+                        @(dg.Total_CURRHRS != 0 ? String.Format("{0:P0}", dg.Total_PrevWkCumulHrs / dg.Total_CURRHRS) : "-")
+                    </td>
+                    <td class="text-right">
+                        @(dg.Total_CURRCOST != 0 ? String.Format("{0:P0}", dg.Total_PrevWkCumulCost / dg.Total_CURRCOST) : "-")
+                    </td>
+                    <td class="text-right">–</td>
+                    <td>0</td>
+                </tr>
+            }
+
+            <!-- Job Total -->
+            <tr style="font-weight:bold; background-color:#dbeeff;">
+                <td><i>Total for @job.JobName</i></td>
+                <td class="text-right">@job.Total_OB_HRS.ToString("N2")</td>
+                <td class="text-right">@job.Total_UnApprovedCNHRS.ToString("N2")</td>
+                <td class="text-right">@job.Total_ApprovedCNHRS.ToString("N2")</td>
+                <td class="text-right">@job.Total_CURRHRS.ToString("N2")</td>
+                <td class="text-right">@job.Total_PrevWkCumulHrs.ToString("N2")</td>
+                <td class="text-right disabled-cell1">@job.Total_CurrWkHrs.ToString("N2")</td>
+                <td class="text-right">@job.Total_ETC_HRS.ToString("N2")</td>
+                <td class="text-right">@job.Total_EAC_Hrs.ToString("N2")</td>
+
+                <td class="text-right bg-palegreen">@job.Total_OB_COST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_UnApprovedCNCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_ApprovedCNCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_CURRCOST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_PrevWkCumulCost.ToString("C2")</td>
+                <td class="text-right bg-palegreen disabled-cell1">@job.Total_CurrWkCost.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_ETC_COST.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@job.Total_EAC_Cost.ToString("C2")</td>
+
+@*              <td class="text-right">
+                    @(job.Total_CURRHRS != 0 ? String.Total_EAC_Cost.ToString("C2"))
+                </td> *@
+                <td class="text-right">
+                    @(job.Total_CURRHRS != 0 ? String.Format("{0:C2}", job.Total_EAC_Cost) : "-")
+                </td>
+                <td class="text-right">
+                    @(job.Total_CURRHRS != 0 ? String.Format("{0:P0}", job.Total_PrevWkCumulHrs / job.Total_CURRHRS) : "-")
+                </td>
+                <td class="text-right">–</td>
+                <td>0</td>
+            </tr>
+            <!-- blank spacer row -->
+            <tr style="height:6px;"><td colspan="21"></td></tr>
+        }
+    </tbody>
+
+    @{
+        // handy grand totals for % cells
+        var grandOBHrs = Model.vwBudgetActuals.Sum(x => x.OB_HRS);
+        var grandUnApprovedCNHRS = Model.vwBudgetActuals.Sum(x => x.UnApprovedCNHRS);
+        var grandApprovedCNHRS = Model.vwBudgetActuals.Sum(x => x.ApprovedCNHRS);
+        var grandCURRHRS = Model.vwBudgetActuals.Sum(x => x.CURRHRS);
+        var grandPrevWkHrs = Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs);
+        var grandCurrWkHrs = Model.vwBudgetActuals.Sum(x => x.CurrWkHrs);
+        var grandETCHrs = Model.vwBudgetActuals.Sum(x => x.ETC_Hrs);
+        var grandEACHrs = Model.vwBudgetActuals.Sum(x => x.EAC_Hrs);
+
+        var grandOBCost = Model.vwBudgetActuals.Sum(x => x.OB_COST);
+        var grandUnApprovedCNCost = Model.vwBudgetActuals.Sum(x => x.UnApprovedCNCOST);
+        var grandApprovedCNCost = Model.vwBudgetActuals.Sum(x => x.ApprovedCNCOST);
+        var grandCURRCOST = Model.vwBudgetActuals.Sum(x => x.CURRCOST);
+        var grandPrevWkCost = Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost);
+        var grandCurrWkCost = Model.vwBudgetActuals.Sum(x => x.CurrWkCost);
+        var grandETCCost = Model.vwBudgetActuals.Sum(x => x.ETC_Cost);
+        var grandEACCost = Model.vwBudgetActuals.Sum(x => x.EAC_Cost);
+    }
+
+    <tfoot>
+        <tr style="font-weight: bold; background-color: #f5f5f5;">
+            <td>Grand Total</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.OB_HRS.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours-toggle">@Model.vwBudgetActuals.Sum(x => x.UnApprovedCNHRS.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours-toggle">@Model.vwBudgetActuals.Sum(x => x.ApprovedCNHRS.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.CURRHRS.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours disabled-cell1">@Model.vwBudgetActuals.Sum(x => x.CurrWkHrs.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.ETC_Hrs.GetValueOrDefault()).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.EAC_Hrs.GetValueOrDefault()).ToString("N2")</td>
+
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.OB_COST.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@Model.vwBudgetActuals.Sum(x => x.UnApprovedCNCOST.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@Model.vwBudgetActuals.Sum(x => x.ApprovedCNCOST.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.CURRCOST.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars disabled-cell1">@Model.vwBudgetActuals.Sum(x => x.CurrWkCost.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.ETC_Cost.GetValueOrDefault()).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.EAC_Cost.GetValueOrDefault()).ToString("C2")</td>
+
+
+            <td class="text-right">
+                @if (@Model.vwBudgetActuals.Sum(x => x.CURRHRS) != 0)
+                {
+                    @String.Format("{0:P0}", @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs) / @Model.vwBudgetActuals.Sum(x => x.CURRHRS))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+            <td class="text-right">
+                @if (@Model.vwBudgetActuals.Sum(x => x.CURRCOST) != 0)
+                {
+                    @String.Format("{0:P0}", @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost) / @Model.vwBudgetActuals.Sum(x => x.CURRCOST))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+@*             <td class="text-right">–</td> <!-- % Complete total typically not meaningful across tasks -->
+                        <td class="text-right">
+                @if (totalCURRCOST != 0 && totalPrevWkCost != 0)
+                {
+                    @(String.Format("{0:N2}", (totalCURRCOST != 0 ? 1.0m : 0m) / (totalPrevWkCost / totalCURRCOST)))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>  *@
+            <td>0</td>
+        </tr>
+    </tfoot>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <script>
+            $(document).ready(function () {
+            // Initialize the Bootstrap Select dropdown
+            $('.selectpicker').selectpicker();
+
+            // Job dropdown change triggers reload with jobGp1Id query param
+            $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                const selectedJobId = $(this).val();
+
+                if (selectedJobId) {
+                    window.location.href = `/CombinedJobs/CombJobsSep?jobGp1Id=${selectedJobId}`;
+                }
+            });
+        });
+    </script>
+}

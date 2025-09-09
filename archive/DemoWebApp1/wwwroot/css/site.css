@@ -1,0 +1,449 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+.bg-danger-transparent {
+    background-color: rgba(220, 53, 69, 0.5) !important;
+}
+
+.bg-warning-transparent {
+    background-color: rgba(255, 193, 7, 0.5) !important;
+}
+
+.bg-success-transparent {
+    background-color: rgba(40, 167, 69, 0.5) !important;
+}
+
+.custom-h1 {
+    color: greenyellow;
+    background-color: gray;
+    text-shadow: 2px 2px 4px #000;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.text-negative {
+    color: red !important;
+}
+
+.toggle-col {
+    transition: all 0.3s ease;
+}
+
+.hidden-col {
+    display: none;
+}
+
+.d-none {
+    display: none !important;
+}
+
+.custom-header-list th {
+    background-color: #f4f9e1 !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-costrpt1 th,
+.custom-header-costrpt1 {
+    background-color: #CFE2F3 !important;
+    font-weight: normal !important;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-costrpt2 th,
+.custom-header-costrpt2 {
+    background-color: #D9E8F5 !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-costrpt3 th,
+.custom-header-costrpt3 {
+    background-color: #E1Edf7 !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-green-costrpt1 th,
+.custom-header-costrpt1 {
+    background-color: #8acc26 !important;
+    font-weight: normal !important;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-green-costrpt2 th,
+.custom-header-costrpt2 {
+    background-color: #D5ff95 !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+tr.custom-header-green-costrpt3 th,
+.custom-header-costrpt3 {
+    background-color: #F1FFDD !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+.bg-palegreen {
+    background-color: #F8FFED !important;
+}
+
+.disabled-cell {
+    background-color: #ddd !important;
+    cursor: not-allowed !important;
+}
+
+.disabled-cell1 {
+    background-color: #e9ecef !important; /* light gray, like Bootstrap disabled inputs */
+    color: #6c757d !important; /* muted text */
+    pointer-events: none; /* disables mouse interactions */
+    opacity: 0.65; /* dimmed appearance */
+    font-style: italic;
+}
+
+
+.nav-link.active {
+    border: 2px solid #ADFF2F; /* Green */
+    border-radius: 4px;
+    padding: 6px 12px;
+    background-color: rgba(173, 255, 47, 0.1);
+    color: #fff !important;
+}
+
+.scrollable-table {
+    height: 600px;
+    overflow-y: auto;
+    min-height:100px;
+    display: block;
+    box-sizing: border-box;
+}
+
+    .scrollable-table table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    .scrollable-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f9f9f9;
+        z-index: 2;
+    }
+
+    .scrollable-table tbody {
+        display: table-row-group; /* ? Keep this */
+    }
+
+    .scrollable-table tr {
+        min-height: 38px;
+    }
+
+
+.chart-container {
+    max-width: 100%;
+    height: 250px; /* or whatever height you want */
+    margin-bottom: 1rem;
+    position: relative; /* important for Chart.js responsiveness */
+}
+
+    .chart-container canvas {
+        width: 100% !important; /* force canvas width */
+        height: 100% !important; /* force canvas height */
+    }
+
+.styled-fieldset {
+    border: 2px solid #8ACC26; /* green border for Required */
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+    .styled-fieldset:nth-of-type(2) {
+        border-color: #6c757d; /* gray for Optional */
+    }
+
+    .optional-fieldset {
+    border-color: #6c757d; /* gray */
+    }
+
+.styled-fieldset legend {
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0 0.5rem;
+}
+
+.styled-legend {
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0 10px;
+    margin-bottom: 0;
+    width: auto;
+}
+
+.styled-legend-required {
+    color:#8ACC26;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0 10px;
+    margin-bottom: 0;
+    width: auto;
+}
+
+/* Adjust this value to your actual header height */
+:root {
+    --header-height: 220px;
+}
+
+/* Flex container for filter + chart */
+#chartContainer {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    /* Take full viewport height minus header */
+    height: calc(100vh - var(--header-height));
+    padding: 10px; /* optional */
+}
+
+/* Filter container - fix width */
+#filterWrapper {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* Canvas container fills remaining space */
+#canvasWrapperMAIN {
+    flex-grow: 1;
+/*     Make sure it fills available height */
+    height: 100%;
+}
+
+#chartContainerMAIN {
+    height: 550px; /* or whatever height you want */
+    width:2000px;
+    margin:10px auto;
+    /*max-height: 450px;*/ /* optional */
+    padding: 10px 0; /* reduce vertical spacing */
+    margin-bottom: 1rem; /* adjust spacing below */
+    display: flex;
+    flex-direction: column; /* keep vertical stacking */
+}
+
+
+/* Canvas container with fixed height */
+#jobDropdown {
+    margin-top:0 !important;
+    padding-top:0 !important;
+}
+
+#chartContainer {
+    display: block;  /*prevent unwanted flex behavior */
+    padding: 0;
+    margin: 0;
+    height: auto;
+    overflow: hidden;  /*in case internal elements overflow */
+/*    border: 1px dashed red;  temp: visualize boundaries */
+}
+
+#canvasWrapper {
+    height: 500px;
+    margin-bottom: 0 !important;
+    padding-bottom:0 !important;
+    position: relative;
+    padding: 0;
+/*    outline:1px dashed red;  temporary*/
+}
+
+ Canvas fills the container 
+#resourceStatusChart {
+    width: 100% !important;
+    height: 300px !important;
+    display: block;
+/*    outline:1px dashed blue; temporary*/
+}
+
+/* Tweak spacing on job dropdown area */
+.d-flex.align-items-center.mb-2 {
+    margin-top: 0.5rem;
+}
+
+.table-compact {
+    font-size: 0.75rem; /* smaller font */
+}
+
+    .table-compact th,
+    .table-compact td {
+        padding: 0.25rem 0.5rem; /* tighter padding */
+        white-space: nowrap; /* prevent wrapping */
+        font-size: 0.75rem !important;
+    }
+
+#statusTablesContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+}
+    #statusTablesContainer table {
+        flex: 0 0 auto;
+        width: 130px;
+        max-width: 130px;
+        font-size: 0.75rem;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        table-layout: fixed;
+    }
+
+    #statusTablesContainer table td,
+    #statusTablesContainer table th {
+        padding: 0.25rem 0.5rem;
+        vertical-align: middle;
+        line-height:1.1 !important;
+        height:1.8rem;
+        white-space:nowrap;
+    }
+
+
+.zero-value {
+    color: #aaa !important;
+}
+
+.fixed-table {
+    width: 100%;
+}
+
+    /* Set min-widths for specific columns by their order */
+    /* Adjust these widths as needed for your content */
+
+    .fixed-table th:nth-child(1),
+    .fixed-table td:nth-child(1) {
+        min-width: 150px; /* task */
+        font-size:0.70rem;
+    }
+
+    .fixed-table th:nth-child(2),
+    .fixed-table td:nth-child(2) {
+        min-width: 120px; /* empgroup */
+        font-size: 0.70rem;
+    }
+
+    .fixed-table th:nth-child(3),
+    .fixed-table td:nth-child(3) {
+        min-width: 80px; /* ETCHrs */
+        font-size: 0.7rem;
+        text-align: right !important;
+    }
+
+    .fixed-table th:nth-child(4),
+    .fixed-table td:nth-child(4) {
+        min-width: 70px; /* ETC Rate */
+        font-size: 0.7rem;
+        text-align:right !important;
+    }
+
+    .fixed-table th:nth-child(5),
+    .fixed-table td:nth-child(5) {
+        min-width: 80px; /* ETC Cost */
+        font-size: 0.7rem;
+        text-align: right !important;
+    }
+    .fixed-table th:nth-child(6),
+    .fixed-table td:nth-child(6) {
+        min-width: 90px; /* Curve */
+        font-size: 0.7rem;
+        text-align:center;
+    }
+    .fixed-table th:nth-child(7),
+    .fixed-table td:nth-child(7) {
+        min-width: 70px; /* StartWE */
+        font-size: 0.7rem;
+    }
+    .fixed-table th:nth-child(8),
+    .fixed-table td:nth-child(8) {
+        min-width: 70px; /* FinishWE */
+        font-size: 0.7rem;
+    }
+    .fixed-table th:nth-child(9),
+    .fixed-table td:nth-child(9) {
+        min-width: 100px; /* Comment */
+        font-size: 0.7rem;
+    }
+    .fixed-table th:nth-child(10),
+    .fixed-table td:nth-child(10) {
+        min-width: 70px; /* save button */
+        font-size: 0.7rem;
+    }
+    .fixed-table th:nth-child(11),
+    .fixed-table td:nth-child(11) {
+        min-width: 70px; /* cancel button */
+        font-size: 0.7rem;
+    }
+
+    /* Add more as needed */
+
+    .fixed-table th,
+    .fixed-table td {
+        white-space: nowrap; /* prevent text wrapping */
+        overflow: hidden;
+        text-overflow: ellipsis; /* add ... for overflow */
+    }
+
+
+
+/* Reduce font size for the flatpickr alternate input field */
+.flatpickr-alt-input {
+    font-size: 0.75rem !important;
+    padding: 0.2rem 0.3rem;
+    height: auto;
+}
+
+/* Optional: also target the hidden original field if needed */
+.date-picker {
+    font-size: 0.75rem !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

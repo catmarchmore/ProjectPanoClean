@@ -1,0 +1,170 @@
+﻿@page
+@model ProjectPano.Pages.Stats.Bubbles1Model
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "Bubbles";
+    // var jsonData = System.Text.Json.JsonSerializer.Serialize(Model.ChartData);
+}
+
+<h5 class="custom-h1">Bubbles - Project Awards Since 2022</h5>
+
+<div style="display: flex; align-items: center; gap: 40px; margin-bottom: 12px;">
+    <a href="/Stats/MktIndex">Back</a>
+    <form method="get">
+        <label>Select Year: </label>
+        <select id="SelectedYear" name="SelectedYear" asp-for="SelectedYear" asp-items="@(new SelectList(Model.Years))" onchange="this.form.submit()"></select>
+    </form>
+</div>
+
+<div id="circlePacking" style="width:15000px; height:600px;"></div>
+
+@section Scripts {
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var data = @Html.Raw(Model.CircleDataJson);
+
+            var width = 1500;
+            var height = 600;
+
+            var svg = d3.select("#circlePacking")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            var streamColors = d3.scaleOrdinal()
+                .domain(["Upstream","Downstream","Midstream","Specialty Chemicals/Commercial"])
+                .range(["#00b0f0","#3cc3f3","#7bd6f7","#0099d1"]);
+
+            // Drop shadow defs
+            var defs = svg.append("defs");
+            var filter = defs.append("filter")
+                .attr("id","dropshadow")
+                .attr("height","130%");
+            filter.append("feGaussianBlur")
+                .attr("in","SourceAlpha")
+                .attr("stdDeviation","3");
+            filter.append("feOffset")
+                .attr("dx","2")
+                .attr("dy","2")
+                .attr("result","offsetblur");
+            var feMerge = filter.append("feMerge");
+            feMerge.append("feMergeNode");
+            feMerge.append("feMergeNode").attr("in","SourceGraphic");
+
+            var pack = d3.pack()
+                .size([width, height])
+                .padding(d => d.depth === 1 ? 20 : 5);
+
+            var root = d3.hierarchy(data)
+                .sum(d => d.children ? 0 : d.value)
+                .eachAfter(d => {
+                    if(d.depth === 1) d.value *= 40;   // scale D1
+                    if(d.depth === 2) d.value *= 6;    // scale D2
+                });
+
+            pack(root);
+
+            // Spread D1 horizontally
+            var d1Nodes = root.children;
+            var spacing = 40; // extra gap
+            d1Nodes.forEach((d, i) => {
+                var dx = ((i + 0.5) * (width / d1Nodes.length)) - d.x + i * spacing;
+                var dy = (height / 2) - d.y;
+                d.descendants().forEach(node => {
+                    node.x += dx;
+                    node.y += dy;
+                });
+            });
+
+            // Draw circles
+            svg.selectAll("circle")
+                .data(root.descendants().slice(1).filter(d => d.depth <= 2))
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("fill", d => d.depth === 1 ? streamColors(d.data.name) : "#ccc")
+                .attr("stroke", "#333")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", d => d.r)
+                .style("filter","url(#dropshadow)")
+                .append("title")
+                .text(d => d.depth === 1 ? `${d.data.name}\nTotal Revenue: $${d3.format(",.0f")(d.value)}k`
+                                           : d.depth === 2 ? `${d.data.name}\n$${d3.format(",.0f")(d.value)}k`
+                                           : "");
+
+            // Labels using tspan for D1 multi-line
+            // Labels
+            var labels = svg.selectAll("text")
+                .data(root.descendants().slice(1).filter(d => d.depth <= 2 && d.value > 0))
+                .enter().append("text")
+                .style("text-anchor", "middle")
+                .style("fill", "#000")
+                .style("font-weight", d => d.depth === 1 ? "bold" : "normal")
+                .style("font-size", d => d.depth === 1 ? "16px" : "12px")
+                .each(function(d) {
+                    var el = d3.select(this);
+                    if (d.depth === 1) {
+                        // D1: top-level stream
+                        el.append("tspan")
+                            .attr("x", d.x)
+                            .attr("y", d.y - d.r - 30)  // place above the circle
+                            .text(d.data.name);
+                        el.append("tspan")
+                            .attr("x", d.x)
+                            .attr("dy", "1.2em")       // second line below first
+                            .text(`Total Revenue: $${d3.format(",.0f")(d.value)}k`);
+                    } else if (d.depth === 2) {
+                        // D2: project type
+                        el.attr("x", d.x)
+                        .attr("y", d.y)
+                        .text(d.data.name);
+                    }
+                });
+
+            labels.raise();
+
+            // Drop shadow
+            var defs = svg.append("defs");
+            var filter = defs.append("filter")
+                .attr("id","dropshadow")
+                .attr("height","130%");
+            filter.append("feGaussianBlur")
+                .attr("in","SourceAlpha")
+                .attr("stdDeviation","3");
+            filter.append("feOffset")
+                .attr("dx","2")
+                .attr("dy","2")
+                .attr("result","offsetblur");
+            var feMerge = filter.append("feMerge");
+            feMerge.append("feMergeNode");
+            feMerge.append("feMergeNode").attr("in","SourceGraphic");
+
+            // Make sure labels are always on top
+            labels.raise();
+
+            // Optional: drop shadow for 3D effect
+            var defs = svg.append("defs");
+            var filter = defs.append("filter")
+                .attr("id","dropshadow")
+                .attr("height","130%");
+            filter.append("feGaussianBlur")
+                .attr("in","SourceAlpha")
+                .attr("stdDeviation","3");
+            filter.append("feOffset")
+                .attr("dx","2")
+                .attr("dy","2")
+                .attr("result","offsetblur");
+            var feMerge = filter.append("feMerge");
+            feMerge.append("feMergeNode");
+            feMerge.append("feMergeNode").attr("in","SourceGraphic");
+
+        });
+    </script>
+}
+
+
+
+
+
+

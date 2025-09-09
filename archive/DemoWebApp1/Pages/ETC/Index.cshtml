@@ -1,0 +1,357 @@
+﻿@page
+@model ProjectPano.Pages.ETC.IndexModel
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "ETC";
+}
+
+@* @section Scripts {
+    <!-- Select2 CSS/JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> *@
+
+<br />
+
+<h3 class="custom-h1">Estimates to Complete</h3>
+
+<label for="jobDropdown">Pick Job</label>
+<div>
+        <select id="jobDropdown" class="form-control" style="width: 300px;">
+            <option value="">-- Select Job --</option>
+            @foreach (var job in Model.ListJobStatus.OrderBy(j => j.ClientJob))
+            {
+                var selectedText = job.jobid.ToString() == Model.thisVWJob.JobID.ToString() ? "selected" : "";
+                <text>
+                <option value="@job.jobid">@job.ClientJob</option>
+                </text>
+            }
+        </select>
+</div>
+<h6 id="selectedJobIdDisplay">Selected jobid: </h6>
+
+<h6>
+    Bigtime Actuals Updated:
+    @if (Model.MaxDateStamp.HasValue)
+    {
+        @Model.MaxDateStamp.Value.ToString("yyyy-MM-dd HH:mm:ss")
+    }
+    else
+    {
+        <span>Not Available</span>
+    }
+</h6>
+<h5 style="font-weight:bold;"> Manager: @Model.thisVWJob.MgrName</h5>
+<br />
+
+    <p>Job ID received: @Model.thisVWJob.JobID</p>
+    <p>BudgetActuals record count: @Model.vwBudgetActuals?.Count</p>
+
+
+
+<table id="myExcelTable" class="table table-striped table-hover table-bordered">
+    <thead>
+        <tr class="custom-header-costrpt1">
+            <th colspan="19" class="header-spanning">@Model.thisVWJob.ClientNameShort : @Model.thisVWJob.JobName</th>
+        </tr>
+        <tr class="custom-header-costrpt1">
+            <th colspan="19" class="header-spanning">
+                <strong>Cost Report as of: </strong>[need to program report WE date]
+            </th>
+        </tr>
+        <!-- Group Header Row -->
+        <tr class="custom-header-costrpt2">
+            <th></th>
+            <th colspan="7" class="text-center colgroup-hours">
+                Hours
+            </th>
+            <th colspan="7" class="text-center colgroup-dollars">
+                Dollars
+            </th>
+            <th colspan="3" class="text-center">Percentages</th>
+            <th></th>
+        </tr>
+
+        <tr class="custom-header-costrpt3">
+            <th>Charge Code</th>
+
+            <!-- HOURS -->
+            <th></th>
+            <th class="align-top col-hours">Orig</th>
+            <th class="align-top col-hours-toggle">Pending Change</th>
+            <th class="align-top col-hours-toggle">Approved Change</th>
+            <th class="align-top col-hours">Current Approved</th>
+            <th class="align-top col-hours">Cumul Spent</th>
+            <th class="align-top col-hours">ETC</th>
+            <th class="align-top col-hours">EAC</th>
+
+            <!-- DOLLARS -->
+            <th class="align-top col-dollars">Orig</th>
+            <th class="align-top col-dollars-toggle">Pending Change</th>
+            <th class="align-top col-dollars-toggle">Approved Change</th>
+            <th class="align-top col-dollars">Current Approved</th>
+            <th class="align-top col-dollars">Cumul Spent</th>
+            <th class="align-top col-dollars">ETC</th>
+            <th class="align-top col-dollars">EAC</th>
+
+            <th class="align-top">% Hrs Spent</th>
+            <th class="align-top">% $ Spent</th>
+            <th class="align-top">% Complete</th>
+            <th class="align-middle text-center">CPI</th>
+        </tr>
+    </thead>
+    @{
+        decimal totalOB_HRS = 0, totalUnApprovedCNHRS = 0, totalApprovedCNHRS = 0, totalCURRHRS = 0;
+        decimal totalBILLQTY = 0, totalEACHrs = 0, totalETCHrs = 0;
+
+        decimal totalOB_COST = 0, totalUnApprovedCNCOST = 0, totalApprovedCNCOST = 0;
+        decimal totalCURRCOST = 0, totalBILLWITHADMINDISC = 0, totalEAC_Cost = 0, totalETCCost = 0;
+    }
+
+    <tbody>
+        @foreach (var item in Model.vwBudgetActuals)
+        {
+            var displayEACCost = item.EAC_Cost == 0 ? item.CURRCOST : item.EAC_Cost;
+            var displayETCCost = item.EAC_Cost == 0 ? item.CURRCOST - item.BILLWITHADMINDISC : item.EAC_Cost - item.BILLWITHADMINDISC;
+
+            var displayEACHrs = item.EAC_Hrs == 0 ? item.CURRHRS : item.EAC_Hrs;
+            var displayETCHrs = item.EAC_Cost == 0 ? item.CURRHRS - item.BILLQTY : item.EAC_Hrs - item.BILLQTY;
+
+            // Accumulate values
+            totalOB_HRS += item.OB_HRS;
+            totalUnApprovedCNHRS += item.UnApprovedCNHRS;
+            totalApprovedCNHRS += item.ApprovedCNHRS;
+            totalCURRHRS += item.CURRHRS;
+            totalBILLQTY += item.BILLQTY;
+            totalEACHrs += displayEACHrs;
+            totalETCHrs += displayETCHrs;
+
+            totalOB_COST += item.OB_COST;
+            totalUnApprovedCNCOST += item.UnApprovedCNCOST;
+            totalApprovedCNCOST += item.ApprovedCNCOST;
+            totalCURRCOST += item.CURRCOST;
+            totalBILLWITHADMINDISC += item.BILLWITHADMINDISC;
+            totalEAC_Cost += displayEACCost;
+            totalETCCost += displayETCCost;
+
+            <tr>
+                <!-- Override Rate Controls -->
+                <td>
+                    <div class="d-flex flex-column">
+                        <span style="font-size: 0.75em;">
+                            Avg:
+                            @(item.CURRHRS != 0 ? (item.CURRCOST / item.CURRHRS).ToString("C2") : "$0.00")
+                        </span>
+
+                        <input type="number" step="0.01" class="form-control input-sm override-rate mt-1"
+                               placeholder="Override"
+                               data-row-id="@item.JobID" />
+
+                        <div class="form-check mt-1">
+                            <input class="form-check-input rate-toggle" type="radio"
+                                   name="rateOption-@item.JobID" value="avg" checked />
+                            <label class="form-check-label" style="font-size: 0.75em;">Avg</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input rate-toggle" type="radio"
+                                   name="rateOption-@item.JobID" value="override" />
+                            <label class="form-check-label" style="font-size: 0.75em;">Override</label>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Standard Data Cells -->
+                <td>@item.MYTASK</td>
+                <td class="text-right disabled-cell">@item.OB_HRS.ToString("N0")</td>
+                <td class="text-right">@item.UnApprovedCNHRS.ToString("N0")</td>
+                <td class="text-right">@item.ApprovedCNHRS.ToString("N0")</td>
+                <td class="text-right">@item.CURRHRS.ToString("N0")</td>
+                <td class="text-right">@item.BILLQTY.ToString("N0")</td>
+
+                <!-- Editable ETC Hrs -->
+                <td>
+                    <input type="number" class="form-control input-sm etc-hrs-input"
+                           value="@displayETCHrs.ToString("N0")"
+                           data-row-id="@item.JobID"
+                           data-avg-rate="@(item.CURRHRS != 0 ? (item.CURRCOST / item.CURRHRS).ToString("F2") : "0")" />
+                </td>
+
+                <!-- Calculated / Display-only Fields -->
+                <td class="text-right">@displayEACHrs.ToString("N0")</td>
+                <td class="text-right">@item.OB_COST.ToString("C0")</td>
+                <td class="text-right">@item.UnApprovedCNCOST.ToString("C0")</td>
+                <td class="text-right">@item.ApprovedCNCOST.ToString("C0")</td>
+                <td class="text-right">@item.CURRCOST.ToString("C0")</td>
+                <td class="text-right">@item.BILLWITHADMINDISC.ToString("C0")</td>
+
+                <!-- Calculated ETC Cost -->
+                <td class="text-right">
+                    <span class="etc-cost-display" id="etcCost-@item.JobID">
+                        @displayETCCost.ToString("C0")
+                    </span>
+                </td>
+
+                <td class="text-right">@displayEACCost.ToString("C0")</td>
+
+                <!-- % complete and CPI -->
+                <td class="text-right">
+                    @(item.CURRHRS != 0 ? String.Format("{0:P0}", item.BILLQTY / item.CURRHRS) : "-")
+                </td>
+                <td class="text-right">
+                    @(item.CURRCOST != 0 ? String.Format("{0:P0}", item.BILLWITHADMINDISC / item.CURRCOST) : "-")
+                </td>
+                <td class="text-right">@item.PctCompl.ToString("P0")</td>
+                <td class="text-right">
+                    @(item.PctCompl != 0 && item.CURRCOST != 0 && item.BILLWITHADMINDISC != 0
+                        ? (item.PctCompl / (item.BILLWITHADMINDISC / item.CURRCOST)).ToString("N2")
+                        : "-")
+                </td>
+            </tr>
+        }
+    </tbody>
+
+    <tfoot>
+        <tr style="font-weight: bold; background-color: #f5f5f5;">
+            <td>newcol</td>
+            <td>Total</td>
+            <td class="text-right col-hours">@totalOB_HRS.ToString("N0")</td>
+            <td class="text-right col-hours-toggle">@totalUnApprovedCNHRS.ToString("N0")</td>
+            <td class="text-right col-hours-toggle">@totalApprovedCNHRS.ToString("N0")</td>
+            <td class="text-right col-hours">@totalCURRHRS.ToString("N0")</td>
+            <td class="text-right col-hours">@totalBILLQTY.ToString("N0")</td>
+            <td class="text-right col-hours">@totalETCHrs.ToString("N0")</td>
+            <td class="text-right col-hours">@totalEACHrs.ToString("N0")</td>
+
+            <td class="bg-palegreen text-right col-dollars">@totalOB_COST.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@totalUnApprovedCNCOST.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars-toggle">@totalApprovedCNCOST.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars">@totalCURRCOST.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars">@totalBILLWITHADMINDISC.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars">@totalETCCost.ToString("C0")</td>
+            <td class="bg-palegreen text-right col-dollars">@totalEAC_Cost.ToString("C0")</td>
+
+
+            <td class="text-right">
+                @if (totalCURRHRS != 0)
+                {
+                    @String.Format("{0:P0}", totalBILLQTY / totalCURRHRS)
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+            <td class="text-right">
+                @if (totalCURRCOST != 0)
+                {
+                    @String.Format("{0:P0}", totalBILLWITHADMINDISC / totalCURRCOST)
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+            <td class="text-right">–</td> <!-- % Complete total typically not meaningful across tasks -->
+            <td class="text-right">
+                @if (totalCURRCOST != 0 && totalBILLWITHADMINDISC != 0)
+                {
+                    @(String.Format("{0:N2}", (totalCURRCOST != 0 ? 1.0m : 0m) / (totalBILLWITHADMINDISC / totalCURRCOST)))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
+        </tr>
+    </tfoot>
+</table>
+
+@section Scripts {
+    <!-- Select2 CSS/JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+        // Export filtered visible rows to XLSX
+    $("#exportExcel").on("click", function() {
+        var table = document.getElementById("myExcelTable");
+        var wb = XLSX.utils.book_new();
+
+        // Clone the table so we can remove hidden rows before exporting
+        var cloneTable = table.cloneNode(true);
+
+        // Remove rows that are hidden by your filter (display:none)
+        var rows = cloneTable.querySelectorAll("tbody tr");
+        rows.forEach((row) => {
+            if (row.style.display === "none") {
+                row.remove();
+            }
+        });
+
+        // Convert cleaned table to worksheet
+        var ws = XLSX.utils.table_to_sheet(cloneTable);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, "FilteredData");
+
+        // Generate a timestamp like 2025-06-07_15-45-32
+        var now = new Date();
+        var timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        var filename = `FilteredProjects_${timestamp}.xlsx`;
+
+        // Export workbook to XLSX file
+        XLSX.writeFile(wb, filename);
+
+    });
+</script>
+
+    <script>
+        $(document).ready(function () {
+            $('#jobDropdown').select2({
+                placeholder: "Select a job...",
+                allowClear: true,
+                width: 'resolve'
+            });
+
+        $('#jobDropdown').on('change', function () {
+            const selectedJobId = $(this).val();
+            if (selectedJobId) {
+                // Redirect to same page with jobId as query parameter
+                window.location.href = `/ETC?jobId=${selectedJobId}`;
+            }
+        });
+
+        });
+    </script>
+
+}
+
+<script>
+    function recalculateETCCost(rowId) {
+        const etcInput = document.querySelector(`.etc-hrs-input[data-row-id='${rowId}']`);
+        const overrideRateInput = document.querySelector(`.override-rate[data-row-id='${rowId}']`);
+        const selectedRate = document.querySelector(`input[name='rateOption-${rowId}']:checked`).value;
+
+        const etcHrs = parseFloat(etcInput.value) || 0;
+        const overrideRate = parseFloat(overrideRateInput.value) || 0;
+        const avgRate = parseFloat(etcInput.getAttribute("data-avg-rate")) || 0;
+
+        const rateToUse = selectedRate === "override" && overrideRate > 0 ? overrideRate : avgRate;
+        const etcCost = etcHrs * rateToUse;
+
+        const targetDisplay = document.getElementById(`etcCost-${rowId}`);
+        targetDisplay.textContent = etcCost.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD"
+        });
+    }
+
+    document.addEventListener("input", function (e) {
+        if (e.target.matches(".etc-hrs-input, .override-rate") ||
+            e.target.matches(".rate-toggle")) {
+            const rowId = e.target.getAttribute("data-row-id") ||
+                          e.target.name.replace("rateOption-", "");
+            recalculateETCCost(rowId);
+        }
+    });
+</script>
+

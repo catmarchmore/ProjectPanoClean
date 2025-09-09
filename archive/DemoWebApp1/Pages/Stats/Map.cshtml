@@ -1,0 +1,117 @@
+﻿@page
+@model ProjectPano.Pages.Stats.MapModel
+@{
+	ViewData["FullWidth"] = false;
+	ViewData["Title"] = "Project Map";
+}
+
+@* <h5 class="custom-h1">Project Map</h5>
+
+<a href="/Stats/MktIndex">Back</a>
+<br />
+<br /> *@
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>US & Canada Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([49, -95], 4);
+
+        // Add basemap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 10,
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Style for regions
+        function style(feature) {
+          return {
+            fillColor: '#74c476',
+            weight: 1,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.6
+          };
+        }
+
+        // Load US states
+        fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json")
+          .then(res => res.json())
+          .then(data => {
+            L.geoJSON(data, { style: style }).addTo(map);
+          });
+
+        // Load Canada provinces
+        fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson")
+          .then(res => res.json())
+          .then(data => {
+            L.geoJSON(data, { style: style }).addTo(map);
+          });
+    </script>
+</body>
+</html>
+
+
+@* <div id="map" style="height:600px;"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Data from C#
+    const data = @Html.Raw(Model.ChartDataJson);
+
+    const states = data.map(d => d.StateCode);
+    const values = data.map(d => d.JobCount);
+    const revenues = data.map(d => d.Revenue);
+
+    // Choropleth
+    const trace = {
+        type: "choropleth",
+        locationmode: "USA-states",
+        locations: states,
+        z: values,  // shading by job count
+        text: revenues.map(r => "$" + r.toLocaleString()),
+        colorscale: "Blues",
+        // colorscale: new object[,] {
+        //     {0, "rgb(165,0,38)"}, // darkest
+        //     {1, "rgb(255,245,240)"} // lightest
+        // },
+        colorbar: {
+            title: "Projects Awarded since 2022"
+        }
+    };
+
+    // Overlay text (counts in middle of states)
+    const textTrace = {
+        type: "scattergeo",
+        locationmode: "USA-states",
+        locations: states,
+        text: values.map(v => v.toString()),
+        mode: "text",
+        textfont: { size: 12, color: "black" }
+    };
+
+    const layout = {
+        geo: {
+            scope: "usa",
+            showlakes: true,
+            lakecolor: "rgb(255,255,255)"
+        },
+        title: "Active Jobs and Revenue by State"
+    };
+
+    Plotly.newPlot("map", [trace, textTrace], layout, {responsive: true});
+</script> *@
+

@@ -1,0 +1,215 @@
+﻿@page
+@model ProjectPano.Pages.JobIndex.IndexModel
+@{
+	ViewData["FullWidth"] = true;
+	ViewData["Title"] = "Job Index";
+}
+@* <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> *@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+@* <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> *@
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<h5 class="custom-h1">Cost to Date / Overall Project Status</h5>
+<h6>
+	Bigtime Actuals Updated:
+	@if (Model.MaxDateStamp.HasValue)
+	{
+		@Model.MaxDateStamp.Value.ToString("yyyy-MM-dd HH:mm:ss")
+	}
+	else
+	{
+		<span>Not Available</span>
+	}
+</h6>
+
+<br />
+<br />
+
+<button id="exportExcel" class="btn btn-success mb-3">Export Filtered List to Excel</button>
+<label for="budgetFilter" style="margin-left:10px;">Filter by Budget Status:</label>
+<select id="budgetFilter" class="form-control" style="width: 200px; display: inline-block; margin-left: 10px;">
+	<option value="all">All</option>
+	<option value="over">Over Budget</option>
+	<option value="under">Under Budget</option>
+</select>
+
+<p>Start typing in the input field to search the table for text matches in Manager, Client, Job, or Comment:</p>
+
+<input class="form-control" id="myInput" type="text" placeholder="Search..">
+
+<br/>
+<br />
+
+<table id="myExcelTable" class="table table-striped table-hover table-bordered">
+	<thead class="custom-header-list">
+		<tr>
+			<th>JobID</th>
+			<th>Mgr Name</th>
+			<th>Client</th>
+			<th>Client/Job</th>
+			<th class="text-right">Original Budget</th>
+			<th class="text-right">Current Budget</th>
+			<th class="text-right">Current Spend</th>
+			<th class="text-right">Percent Spend</th>
+			<th>Over/Under Budget</th>
+			<th class="text-right">Percent Complete</th>
+			<th class="text-right">CPI</th>
+			<th class="text-right">EAC</th>
+			<th>Forecast Finish WE</th>
+			<th>Status Comment</th>
+			<th>Update Status</th>
+			<th>View Cost Report</th>
+		</tr>
+	</thead>
+	<tbody id="myTable">
+		@{
+			foreach (var item in Model.ListJobStatus)
+			{
+				<tr>
+					<td>@item.jobid</td>
+					<td>@item.MgrName</td>
+					<td>@item.Client</td>
+					<td>@item.ClientJob</td>
+					<td class="text-right">@String.Format("{0:C0}", item.OriginalBudget)</td>
+					<td class="text-right">@String.Format("{0:C0}", item.CurrentBudget)</td>
+					<td class="text-right">@String.Format("{0:C0}", item.CurrentCumulativeSpend)</td>
+
+					<td class="text-right @(item.PercentSpent > 1 ? "bg-danger-transparent" : "")">
+						@String.Format("{0:P1}", item.PercentSpent)
+					</td>
+
+					<td class="@(item.PercentSpent > 1 ? "bg-danger-transparent" : "bg-success-transparent")">
+						@(item.PercentSpent > 1 ? "Over Budget" : "Under Budget")
+					</td>
+
+					<td class="text-right">@String.Format("{0:P1}", item.PercentComplete)</td>
+
+					@{
+						decimal ratio = item.PercentSpent != 0 ? item.PercentComplete / item.PercentSpent : 0;
+						string ratioClass = "";
+
+						if (item.PercentSpent != 0)
+						{
+							ratioClass = ratio < 0.75m ? "bg-danger-transparent"
+							: ratio < 0.85m ? "bg-warning-transparent"
+							: "bg-success-transparent";
+						}
+					}
+					<td class="text-right @ratioClass">
+						@(item.PercentSpent != 0 ? ratio.ToString("0.00") : "N/A")
+					</td>
+
+					<td class="text-right @(item.EACCost > item.CurrentBudget ? "bg-danger-transparent" : "bg-success-transparent")">
+						@String.Format("{0:C0}", item.EACCost) 
+					</td>
+
+
+					<td class=" @(item.FinishDate <= @Model.ThisWeekEnding? "bg-danger-transparent" : "bg-success-transparent")">
+						@item.FinishDate.ToString("dd-MMM-yy")
+					</td>
+
+					<td>@item.comment</td>
+					<td>
+						<a href="/JobStatus/Edit?ID=@item.ProjectProgID" class="btn btn-success">Update Status</a>
+					</td>
+					<td>
+						<a href="/ETC/Index1" class="btn btn-success">
+							<span class="glyphicon glyphicon-zoom-in"></span> View Cost Report
+						</a>
+					</td>
+				</tr>
+			}
+		}
+	</tbody>
+</table>
+
+<script>
+	$(document).ready(function() {
+		function filterTable() {
+			var searchValue = $("#myInput").val().toLowerCase();
+			var budgetFilter = $("#budgetFilter").val();
+
+			$("#myTable tr").filter(function() {
+				var rowText = $(this).text().toLowerCase();
+				var budgetText = $(this).find('td').eq(8).text().trim().toLowerCase(); // 7 is the Over/Under Budget column (0-based)
+
+				var matchesSearch = rowText.indexOf(searchValue) > -1;
+				var matchesBudget =
+					budgetFilter === "all" ||
+					(budgetFilter === "over" && budgetText === "over budget") ||
+					(budgetFilter === "under" && budgetText === "under budget");
+
+				$(this).toggle(matchesSearch && matchesBudget);
+			});
+		}
+
+		$("#myInput, #budgetFilter").on("keyup change", filterTable);
+
+		// Export filtered visible rows to XLSX
+	$("#exportExcel").on("click", function () {
+		var table = document.getElementById("myExcelTable");
+		var wb = XLSX.utils.book_new();
+
+		// Clone the table to filter out hidden rows
+		var cloneTable = table.cloneNode(true);
+		var rows = cloneTable.querySelectorAll("tbody tr");
+		rows.forEach((row) => {
+			if (row.style.display === "none") {
+				row.remove();
+			}
+		});
+
+		// Convert table to sheet
+		var ws = XLSX.utils.table_to_sheet(cloneTable, { raw: false });
+
+		// Apply formatting to header row (bold)
+		const range = XLSX.utils.decode_range(ws['!ref']);
+		for (let C = range.s.c; C <= range.e.c; ++C) {
+			const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+			if (!ws[cellAddress]) continue;
+			ws[cellAddress].s = {
+				font: { bold: true },
+				fill: { fgColor: { rgb: "D9E1F2" } }, // light blue background
+				alignment: { horizontal: "center" },
+				border: {
+					top: { style: "thin", color: { auto: 1 } },
+					bottom: { style: "thin", color: { auto: 1 } },
+					left: { style: "thin", color: { auto: 1 } },
+					right: { style: "thin", color: { auto: 1 } }
+				}
+			};
+		}
+
+		// Apply number formatting to relevant columns
+		const currencyCols = [4, 5, 6, 11]; // Original Budget, Current Budget, Spend, EAC
+		const percentCols = [7, 9]; // Percent Spent, Percent Complete
+		const ratioCol = 10;
+
+		for (let R = 1; R <= range.e.r; ++R) {
+			currencyCols.forEach(C => {
+				const addr = XLSX.utils.encode_cell({ r: R, c: C });
+				if (ws[addr]) ws[addr].z = '"$"#,##0';
+			});
+			percentCols.forEach(C => {
+				const addr = XLSX.utils.encode_cell({ r: R, c: C });
+				if (ws[addr]) ws[addr].z = '0.0%';
+			});
+			const ratioAddr = XLSX.utils.encode_cell({ r: R, c: ratioCol });
+			if (ws[ratioAddr] && ws[ratioAddr].v !== "N/A") {
+				ws[ratioAddr].z = '0.00';
+			}
+		}
+
+		ws['!cols'] = Array(range.e.c + 1).fill({ wch: 20 }); // optional: widen columns
+
+		// Add to workbook and export
+		XLSX.utils.book_append_sheet(wb, ws, "FilteredData");
+		const now = new Date();
+		const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
+		XLSX.writeFile(wb, `FilteredProjects_${timestamp}.xlsx`);
+
+
+		});
+	});
+</script>
+

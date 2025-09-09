@@ -1,0 +1,551 @@
+﻿@page
+@using System.Text.Json
+@using ProjectPano
+@model ProjectPano.Pages.ResourceSpread.ResourceSpreadModel
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "Discipline Resource Spread";
+}
+
+<!-- ✅ Bootstrap 4.6 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+
+<!-- ✅ Site & compiled styles -->
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/ProjectPano.styles.css" asp-append-version="true" />
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+
+@{
+    var spreadDataJson = JsonSerializer.Serialize(Model.SpreadWeeks);
+    var spreadCheckJson = JsonSerializer.Serialize(Model.SpreadCheckList);
+    var empGroupResourcesJson = JsonSerializer.Serialize(Model.ListEmpGroupResources, new JsonSerializerOptions { PropertyNamingPolicy = null });
+}
+<script>
+    var spreadData = @Html.Raw(spreadDataJson);
+    const jsonSizeKB = new Blob([JSON.stringify(spreadData)]).size / 1024;
+    console.log(`Spread JSON size: ${jsonSizeKB.toFixed(1)} KB`);
+    const spreadCheckData = @Html.Raw(spreadCheckJson);  
+    const empGroupResources = @Html.Raw(empGroupResourcesJson);
+</script>
+
+
+<h4 class="custom-h1">Discipline Resource Spread</h4>
+
+<a href="/ResourceSpread/Home">Back</a>
+<br />
+<br />
+
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+    <button id="exportBtn" class="btn btn-sm btn-success">Export to Excel</button>
+    <select id="groupFilter" class="form-control" style="width: 200px;">
+        <option value="">-- All Groups --</option>
+    </select>
+</div>
+
+<div class="d-flex flex-row align-start flex-wrap" style="gap: 24px; align-items: flex-start;">
+    <!-- Chart container -->
+    <div id="empDetailsContainer" class="mt-4"></div>
+    
+    <div id="canvasWrapperMAIN" >
+        <canvas id="resourceStatusChart" width="1000" height="600"></canvas>
+    </div>
+
+    <!-- Status tables laid out side-by-side -->
+    <div id="statusTablesContainer" class="d-flex flex-wrap" style="gap: 16px; max-width: 1000px;">
+        <!-- Tables injected here by JS -->
+    </div>
+</div>
+
+
+
+@* <div id="statusTablesContainer" class="d-flex flex-wrap mt-3" style="gap: 16px;"></div> *@
+
+
+@* <pre>@JsonSerializer.Serialize(Model.SpreadWeeks, new JsonSerializerOptions { WriteIndented = true })</pre> *@
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const filterDropdown=document.getElementById("groupFilter");
+
+        // Dropdown setup
+        const uniqueGroups = [...new Set(spreadData.map(r => r.EmpResGroupDesc))].sort();
+        uniqueGroups.forEach(group => {
+            const option = document.createElement("option");
+            option.value = group;
+            option.textContent = group;
+            filterDropdown.appendChild(option);
+        });
+
+        //const groupDropdown = document.getElementById("groupFilter");
+        const selectedGroup = filterDropdown.value || null;
+
+        buildStatusTables(selectedGroup);
+        buildEmpDetailsTable(selectedGroup);
+        
+        //const rawData = @Html.Raw(spreadDataJson);
+        const rawData=spreadData;
+        const statusOrder = ["Backlog - Actual", "Backlog - ETC", "RFP Submitted - ETC", "RFP Received - ETC", "Qualified - ETC"];
+        const statusColors = {
+            "Backlog - Actual": "rgba(0, 102, 34, 0.7)",
+            "Backlog - ETC": "rgba(108, 208, 49, 0.7)",
+            "Qualified - ETC": "rgba(0, 255, 255, 0.7)",
+            "RFP Submitted - ETC": "rgba(128, 128, 128, 0.7)",
+            "RFP Received - ETC": "rgba(255, 0, 255, 0.7)"
+        };
+
+        //shade actuals
+        // Plugin to shade first N columns
+        const highlightActualsPlugin = {
+            id: 'highlightActuals',
+            beforeDatasetsDraw(chart, args, options) {
+            const {ctx, chartArea: {top, bottom}, scales: {x}} = chart;
+            const numWeeks = options.numWeeks || 4;
+            const label = options.label || 'Actuals';
+            const color = options.color || 'rgba(200,200,200,0.3)';
+
+        // Bar width (assuming evenly spaced categories)
+            const barWidth = x.getPixelForValue(1) - x.getPixelForValue(0);
+
+        // Start at the *left edge* of the first bar
+            const xStart = x.getPixelForValue(0) - barWidth / 2;
+        // End at the *right edge* of the 4th bar
+            const xEnd   = x.getPixelForValue(numWeeks - 1) + barWidth / 2;
+
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.fillRect(xStart, top, xEnd - xStart, bottom - top);
+
+        // Optional label
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(label, (xStart + xEnd)/2, top + 5);
+
+            ctx.restore();
+            }
+        };
+
+
+        const ctxStatus = document.getElementById('resourceStatusChart').getContext('2d');
+        //const filterDropdown = document.getElementById("groupFilter");
+
+        function getGroupedStatusData(data) {
+            const result = {};
+            data.forEach(item => {
+                const week = item.WeekEnding.substring(0, 10);
+                const group = `${item.ResourceStatus} - ${item.ActualETC}` || "Unspecified";
+                if (!result[week]) result[week] = {};
+                if (!result[week][group]) result[week][group] = 0;
+                result[week][group] += item.SpreadHrs;
+            });
+            return result;
+        }
+
+        document.getElementById('groupFilter').addEventListener('change', function() {
+            buildEmpDetailsTable(this.value);
+        });
+
+
+        function getCapacityLines(data, labels, selectedGroup) {
+            const ohLine = [];
+            const ohOtLine = [];
+
+            labels.forEach(week => {
+                const weekData = data.filter(d => d.WeekEnding.substring(0, 10) === week);
+
+                if (selectedGroup) {
+                    const groupRows = weekData.filter(d => d.EmpResGroupDesc === selectedGroup);
+                    const unique = [...new Map(groupRows.map(d => [d.EmpResGroupDesc, d])).values()];
+                    const totalOH = unique.reduce((sum, r) => sum + (r.WklyBillableOH || 0), 0);
+                    const totalOHOT = unique.reduce((sum, r) => sum + (r.WklyBillableOHOT || 0), 0);
+                    ohLine.push(totalOH);
+                    ohOtLine.push(totalOHOT);
+                } else {
+                    const totalRow = weekData.find(d => d.TotalWklyBillableOH !== undefined);
+                    ohLine.push(totalRow?.TotalWklyBillableOH || 0);
+                    ohOtLine.push(totalRow?.TotalWklyBillableOHOT || 0);
+                }
+            });
+
+            return { ohLine, ohOtLine };
+        }
+
+        function buildChart(selectedGroup = null) {
+            const filteredData = selectedGroup
+                ? rawData.filter(r => r.EmpResGroupDesc === selectedGroup)
+                : rawData;
+
+            const allWeeks = [...new Set(filteredData.map(d => d.WeekEnding.substring(0, 10)))];
+            const sortedWeeks = allWeeks.sort((a, b) => new Date(a) - new Date(b));
+            const labels = sortedWeeks.slice(0,20); // First 20
+
+            const filteredWeeksData = filteredData.filter(d =>
+                labels.includes(d.WeekEnding.substring(0, 10))
+            );
+
+            const groupedStatusData = getGroupedStatusData(filteredWeeksData);
+
+            console.log("Labels:", labels);
+            console.log("all weeks:",labels);
+
+            const { ohLine, ohOtLine } = getCapacityLines(rawData, labels, selectedGroup);
+
+            const datasets = statusOrder
+                .filter(status => filteredWeeksData.some(r => `${r.ResourceStatus} - ${r.ActualETC}` === status))
+                .map(status => {
+                    const color = statusColors[status] || "rgba(200, 200, 200, 0.7)";
+                    return {
+                        label: status,
+                        data: labels.map(week => groupedStatusData[week]?.[status] ?? 0),
+                        backgroundColor: color,
+                        borderColor: color,
+                        borderWidth: 1,
+                        stack: 'StatusGroups'
+                    };
+                });
+
+                console.log("First dataset:", datasets[0]?.label, datasets[0]?.data);
+
+                datasets.push(
+                {
+                    label: 'WklyBillableOH',
+                    data: ohLine,
+                    type: 'line',
+                    yAxisID:'y',
+                    // yAxisID:'y2',
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    borderDash: [],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    datalabels: {
+                    display: function(context) {
+                        const midIndex = Math.floor(context.dataset.data.length / 2);
+                        return context.dataIndex === midIndex;
+                    },
+                    align: 'top',
+                    anchor: 'center',
+                    formatter: function(value) {
+                        return value.toFixed(0);
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    color: 'darkred'
+                    }
+                },
+                {
+                    label: 'WklyBillableOHOT',
+                    data: ohOtLine,
+                    type: 'line',
+                    // yAxisID:'y2',
+                    yAxisID:'y',
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    datalabels: {
+                    display: function(context) {
+                        const midIndex = Math.floor(context.dataset.data.length / 2);
+                        return context.dataIndex === midIndex;
+                    },
+                    align: 'top',
+                    anchor: 'center',
+                    formatter: function(value) {
+                        return value.toFixed(0);
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    color: 'darkred'
+                    }
+                }
+                );
+
+
+            Chart.register(ChartDataLabels);
+            Chart.register(highlightActualsPlugin);
+
+            return new Chart(ctxStatus, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio:false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedGroup
+                                ? `Spread by Project Status: ${selectedGroup}`
+                                : 'Spread by Project Status',
+                            font: { size: 18 }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+
+                        highlightActuals: {
+                            numWeeks: 4,
+                            label: 'Actuals',
+                            color: 'rgba(128, 128, 128, 0.25)'
+                        },
+
+                        legend: {
+                            position: 'top'
+                        },
+                        datalabels: {
+                            color: function(context) {
+                                // If dataset label is "Backlog - Actual", return white, else default gray
+                                return context.dataset.label === "Backlog - Actual" ? "#404040" : "#555555";
+                            },
+                            anchor: 'center',
+                            align: 'center',
+                            font: { weight: 'bold' },
+                            formatter: function(value) {
+                                return value >= 10 ? value.toFixed(0) : '';
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: { display: true, text: 'Week Ending' },
+                            ticks: {
+                                callback: function (value) {
+                                    const raw = this.getLabelForValue(value); //value; // this.getLabelForValue(value);
+                                    const date = new Date(raw);
+                                    return isNaN(date) ? raw : `${date.getMonth() + 1}/${date.getDate() + 1}`;
+                                    //return `${date.getMonth() + 1}/${date.getDate()+1}`;
+                                }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            title: { display: true, text: 'Hours' }
+                        },
+                        y2: {
+                            stacked: false,
+                            display:false,
+                            position:'right',
+                            title: { display: true, text: 'Capacity Lines' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        //new empgroup list 'pivot'
+        function buildEmpDetailsTable(selectedGroup) {
+            const container = document.getElementById("empDetailsContainer");
+            if (!container) {
+                console.error("empDetailsContainer not found");
+                return;
+            }
+
+            container.innerHTML = "";
+            console.log("Building table for group:", selectedGroup);
+
+            let filteredRows = selectedGroup
+                ? empGroupResources.filter(r => r.EmpResGroupDesc === selectedGroup)
+                : empGroupResources;
+
+            console.log("matching rows:", filteredRows.length);
+
+            if (filteredRows.length === 0) return;
+
+            const table = document.createElement("table");
+            table.classList.add("table", "table-compact","table-bordered");
+            table.style.backgroundColor = "#ffe5b4";
+            table.style.border = "2px solid red";
+
+            const thead = document.createElement("thead");
+            thead.innerHTML = `
+                <tr>
+                    <th>Employee</th>
+                    <th>Wkly<br>Billable<br>OH</th>
+                    <th>Wkly<br>Billable<br>OHOT</th>
+                </tr>
+            `;
+
+            const tbody = document.createElement("tbody");
+            let totalOH = 0;
+            let totalOHOT = 0;
+
+            for (const row of filteredRows) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.EmpName || row.empName}</td>
+                    <td class="text-align: right">${row.WklyBillableOH?.toFixed(1) ?? ""}</td>
+                    <td class="text-align: right">${row.WklyBillableOHOT?.toFixed(1) ?? ""}</td>
+                `;
+                tbody.appendChild(tr);
+
+                totalOH += row.WklyBillableOH ?? 0;
+                totalOHOT += row.WklyBillableOHOT ?? 0;
+            }
+
+            const tfoot = document.createElement("tfoot");
+            tfoot.innerHTML = `
+                <tr>
+                    <th>Total</th>
+                    <th class="text-align: right">${totalOH.toFixed(1)}</th>
+                    <th class="text-align: right">${totalOHOT.toFixed(1)}</th>
+                </tr>
+            `;
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            table.appendChild(tfoot);
+
+            container.appendChild(table);
+        }
+
+
+        //new stuff here to make 'pivot tables'
+        function buildStatusTables(selectedGroup = null) {
+        const container = document.getElementById('statusTablesContainer');
+        container.innerHTML = ''; // Clear old tables
+
+        const statusColors = {
+            "Backlog": "#d4f4d2",
+            "RFP Submitted": "#e0e0e0",
+            "RFP Received": "#fcd6f8",
+            "Qualified": "#ccf4ff"
+        };
+
+        const validStatuses = Object.keys(statusColors);
+
+        const relevantData = spreadCheckData.filter(r =>
+            r.ActualETC === "ETC" &&
+            (!selectedGroup || r.EmpResGroupDesc === selectedGroup)
+        );
+
+        const grouped = {};
+
+        relevantData.forEach(row => {
+            const rawStatus = row.ResourceStatus?.trim() || "";
+            if (!validStatuses.includes(rawStatus)) return;
+
+            if (!grouped[rawStatus]) grouped[rawStatus] = {};
+            const client = row.ClientNameShort || "Unspecified";
+            if (!grouped[rawStatus][client]) grouped[rawStatus][client] = 0;
+            grouped[rawStatus][client] += row.SpreadHrs;
+        });
+
+        Object.entries(grouped).forEach(([status, clientData]) => {
+            const table = document.createElement('table');
+            //table.className = "table table-sm table-bordered";
+            table.className = "table";
+            table.style.backgroundColor = statusColors[status] || "#f8f9fa";
+            // table.style.minWidth = "220px";
+            // table.style.fontSize="0.85rem";
+
+            const thead = document.createElement("thead");
+            thead.innerHTML = `<tr><th colspan="2">${status}</th></tr><tr><th>Client</th><th class="text-right">Hrs</th></tr>`;
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+
+            const sortedEntries = Object.entries(clientData).sort((a, b) =>
+                a[0].localeCompare(b[0])
+            );
+
+            let total = 0;
+
+            sortedEntries.forEach(([client, hours]) => {
+                total += hours;
+                const row = document.createElement("tr");
+                row.innerHTML = `<td style="width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${client}</td>
+                    <td class="text-right">${hours.toFixed(1)}</td>`;
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+
+            const tfoot = document.createElement("tfoot");
+            tfoot.innerHTML = `<tr class="font-weight-bold">
+                               <td>Total</td>
+                               <td class="text-right">${total.toFixed(1)}</td>
+                           </tr>`;
+            table.appendChild(tfoot);
+
+            container.appendChild(table);
+        });
+    }
+
+
+        //end of pivots here and building begins
+        let resourceStatusChart = buildChart();
+        buildStatusTables();
+
+        filterDropdown.addEventListener("change", () => {
+            resourceStatusChart.destroy();
+            const selectedGroup = filterDropdown.value || null;
+            buildEmpDetailsTable(selectedGroup);
+            resourceStatusChart = buildChart(selectedGroup);
+            buildStatusTables(selectedGroup);
+        });
+
+        //chart exporter
+        document.getElementById('exportBtn').addEventListener('click', function () {
+            // Get the current chart data from the active chart
+            const currentChart = resourceStatusChart;
+            const chartLabels = currentChart.data.labels; // These are your week endings
+            const chartDatasets = currentChart.data.datasets; // These are your datasets
+
+            // Prepare data matrix
+            const headerRow = ['Week Ending', ...chartDatasets.map(ds => ds.label)];
+
+            // Create data rows - one for each week
+            const dataRows = chartLabels.map((week, weekIndex) => {
+                const row = [week];
+                chartDatasets.forEach(ds => {
+                    // Get the data value for this week from each dataset
+                    const value = ds.data[weekIndex] || 0;
+                    row.push(value);
+                });
+                return row;
+            });
+
+            const worksheetData = [headerRow, ...dataRows];
+
+            // Add totals row
+            const totalsRow = ['Total'];
+            chartDatasets.forEach(ds => {
+                const total = ds.data.reduce((sum, value) => sum + (value || 0), 0);
+                totalsRow.push(total.toFixed(1));
+            });
+            worksheetData.push([]);
+            worksheetData.push(totalsRow);
+
+            // Create worksheet and workbook
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'ResourceSpreadData');
+
+            // Trigger download
+            XLSX.writeFile(workbook, 'ResourceSpreadData.xlsx');
+        });
+    });
+</script>
+
+

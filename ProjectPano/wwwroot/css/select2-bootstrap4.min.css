@@ -1,0 +1,31 @@
+/*!
+ * Select2 Bootstrap4 Theme v1.5.2 (https://github.com/ttskch/select2-bootstrap4-theme)
+ * Licensed under MIT (https://github.com/ttskch/select2-bootstrap4-theme/blob/master/LICENSE)
+ */
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+  line-height: 1.6;
+}
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+  height: calc(2.25rem + 2px);
+  top: 0;
+  right: 0.75rem;
+  width: 1.75rem;
+}
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+  margin-top: .31rem;
+  margin-right: .125rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  color: #fff;
+}
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+  margin-right: .5rem;
+  color: #fff;
+}
+.select2-container--bootstrap4.select2-container--focus .select2-selection,
+.select2-container--bootstrap4.select2-container--open .select2-selection {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}

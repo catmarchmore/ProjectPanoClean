@@ -1,0 +1,166 @@
+﻿@page
+@model ProjectPano.Pages.Stats.TreeMapModel
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "TreeMap";
+    // var jsonData = System.Text.Json.JsonSerializer.Serialize(Model.ChartData);
+}
+
+<h5 class="custom-h1">TreeMap - @Model.SelectedYear</h5>
+
+<div style="display: flex; align-items: center; gap: 40px; margin-bottom: 12px;">
+    <a href="/Stats/MktIndex">Back</a>
+    <form method="get">
+        <label>Select Year: </label>
+        <select id="SelectedYear" name="SelectedYear" asp-for="SelectedYear" asp-items="@(new SelectList(Model.Years))" onchange="this.form.submit()"></select>
+    </form>
+</div>
+
+
+@* <form method="get" class="mb-3">
+    <label for="year">Year:&nbsp;</label>
+    <select id="year" name="SelectedYear">
+        @foreach (var y in Model.Years)
+        {
+            <option value="@y" selected="@(y == Model.SelectedYear ? "selected" : null)">@y</option>
+        }
+    </select>
+    <button type="submit">CLICK TO VIEW</button>
+</form> *@
+
+<div id="chart" style="width:100%; max-width:2000px; height:650px; border:1px solid #eee;"></div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    (function () {
+        const data = @Html.Raw(Model.TreemapJson);
+
+        const container = document.getElementById("chart");
+        const width  = container.clientWidth || 2000;
+        const height = container.clientHeight || 650;
+
+        // const formatK = v => (v ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 }) + "k";
+
+        const formatK = v =>
+        "$" + (v ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 }) + "k";
+
+
+        // // Simple color per stream (stable, no extra libs)
+        // const streamIndex = {};
+        // (data.children || []).forEach((s, i) => streamIndex[s.name] = i);
+        // const colorFor = (name) => {
+        //     const i = streamIndex[name] ?? 0;
+        //     // evenly spaced hues
+        //     return `hsl(${(i * 80) % 360},55%,60%)`;
+        // };
+
+        const streamColors = {
+        "Upstream": d3.interpolateBlues,
+        "Downstream": d3.interpolateOranges,
+        "Midstream": d3.interpolateGreens,
+        "Specialty Chemicals/Commercial": d3.interpolatePurples
+        };
+        // 1. Build hierarchy first
+        const root = d3.hierarchy(data)
+            .sum(d => d.value || 0)
+            .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+        // 2. Then compute max value
+        //const maxVal = d3.max(root.leaves(), d => d.value);
+        const streamMax = {};
+        (root.children || []).forEach(streamNode => {
+            streamMax[streamNode.data.name] = d3.max(streamNode.leaves(), d => d.value);
+        });
+
+        d3.treemap()
+            .size([width, height])
+            .paddingInner(2)
+            .paddingOuter(4)
+            (root);
+
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("viewBox", [0, 0, width, height])
+            .attr("width", "100%")
+            .attr("height", "100%");
+
+        // Leaves are ProjectType nodes
+        const leaf = svg.selectAll("g.leaf")
+            .data(root.leaves())
+            .join("g")
+            .attr("class", "leaf")
+            .attr("transform", d => `translate(${d.x0},${d.y0})`);
+        
+        //3. apply gradient shading based on value
+        leaf.append("rect")
+            .attr("rx", 6)
+            .attr("ry", 6)
+            .attr("width", d => Math.max(0, d.x1 - d.x0))
+            .attr("height", d => Math.max(0, d.y1 - d.y0))
+            // .attr("fill", d => {
+            //     const interp = streamColors[d.parent?.data?.name] || d3.interpolateGreys;
+            // const rawT = (d.value || 0) / maxVal; // 0–1
+            // const t = 0.09 + rawT * 0.5; // maps to 0.2–0.8 instead of 0–1
+            // return interp(t);
+            // })
+          leaf.select("rect")
+            .attr("fill", d => {
+                const streamName = d.parent?.data?.name || "";
+                const interp = streamColors[streamName] || d3.interpolateGreys;
+                const maxForStream = streamMax[streamName] || 1;
+                const rawT = (d.value || 0) / maxForStream; // normalize within stream
+                const t = 0.15 + rawT * 0.4; // keep in 0.2–0.8 range
+                return interp(t);
+            })
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1);
+
+        const truncate = (str, max) => str.length > max ? str.slice(0, max - 1) + "…" : str;
+        // Small label inside each tile
+        leaf.append("text")
+            .attr("x", 6)
+            .attr("y", 16)
+            .attr("font-size", 12)
+            .attr("fill", "#111")
+            // .text(d => {
+            //     const stream = d.parent?.data?.name ?? "";
+            //     const type   = d.data?.name ?? "";
+            //     return `${type}`;
+            .text(d => truncate(d.data.name, 15));
+            //});
+
+        // Value on second line if space allows
+        //const truncate = (str, max) => str.length > max ? str.slice(0, max - 1) + "…" : str;
+
+        leaf.append("text")
+            .attr("x", 6)
+            .attr("y", 32)
+            .attr("font-size", 11)
+            .attr("fill", "#333")
+            .text(d => formatK(d.value));
+            // .text(d => (d.x1 - d.x0 > 60 && d.y1 - d.y0 > 20) ? d.data.name : "");
+            //.text(d => truncate(d.data.name, 15));
+
+        // Tooltip on hover
+        leaf.append("title")
+            .text(d => {
+                const stream = d.parent?.data?.name ?? "";
+                const type   = d.data?.name ?? "";
+                return `${stream} → ${type}\n${formatK(d.value)}`;
+            });
+
+        // Stream headers (non-leaf parents)
+        const parents = svg.selectAll("g.parent")
+            .data(root.children || [])
+            .join("g")
+            .attr("class", "parent");
+
+        parents.append("text")
+            .attr("x", d => d.x0 + 24)
+            // .attr("y", d => d.y0 + 18)
+            .attr("y", d => d.y0 + 80)
+            .attr("font-weight", 700)
+            .attr("fill", "#222")
+            .text(d => d.data.name);
+    })();
+</script>

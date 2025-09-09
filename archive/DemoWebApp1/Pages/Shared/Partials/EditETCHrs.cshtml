@@ -1,0 +1,189 @@
+﻿@page
+@model ProjectPano.Pages.Shared.Partials.EditETCHrsModel
+
+@{
+    Layout = null;
+    int i = 0;
+    var jobId = Model.PopupFormModel.FilteredDiscETC.FirstOrDefault()?.JobID ?? 0;
+    var empResGroupDesc = Model.PopupFormModel.FilteredDiscETC.FirstOrDefault()?.EmpResGroupDesc ?? "";
+}
+
+
+<form method="post" id="inlineEditForm" asp-page-handler="EditForm">
+    <input type="hidden" id="JobID" name="JobID" value="@jobId" />
+    <input type="hidden" id="EmpResGroupDesc" name="EmpResGroupDesc" value="@empResGroupDesc" />
+
+
+<div style="overflow-x:auto;">
+    <table class="table table-sm table-bordered table-compact fixed-table">
+        <thead>
+            <tr>
+                <th>Bigtime Task Code</th>
+                <th>Resource Group</th>
+                <th>ETC Hrs</th>
+                <th>ETC Rate</th>
+                <th>ETC Cost</th>
+                <th>Curve</th>
+                <th>Start WE</th>
+                <th>Finish WE</th>
+                <th>Comment</th>
+                <th>Save</th>
+                <th>Cancel</th>
+            </tr>
+        </thead>
+        <tbody>
+@{ var i = 0; }
+@foreach (var item in Model.PopupFormModel.FilteredDiscETC)
+{
+    <tr class="editRow" data-id="@item.DiscEtcID">
+        <input type="hidden" name="items[@i].DiscEtcID" value="@item.DiscEtcID" />
+        <input type="hidden" name="items[@i].OBID" value="@item.OBID" />
+        <input type="hidden" name="items[@i].RptWeekend" value="@item.RptWeekend.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="items[@i].EACHrs" value="@item.EACHrs" />
+        <input type="hidden" name="items[@i].EACCost" value="@item.EACCost" />
+        <input type="hidden" name="items[@i].EmpResGroupDesc" value="@item.EmpResGroupDesc" />
+        <input type="hidden" name="items[@i].EmpID" value="@item.EmpID" />
+        <input type="hidden" name="items[@i].JobID" value="@item.JobID" />
+        <input type="hidden" name="items[@i].ETCRateTypeID" value="@item.ETCRateTypeID" />
+        <!-- Add other hidden fields as needed -->
+
+        <td>
+            <input type="text" name="items[@i].myTask" class="form-control form-control-sm" value="@item.myTask" />
+        </td>
+        <td>
+            <select name="items[@i].EmpGroupID" class="form-control form-control-sm empgroupid">
+                <option value="">--</option>
+                @foreach (var groupItem in Model.PopupFormModel.ListResourceGroups)
+                {
+                    var isSelected = item.EmpGroupID == groupItem.EmpGroupID ? "selected" : "";
+                    @:<option value="@groupItem.EmpGroupID" @isSelected>@groupItem.EmpGroup</option>
+                }
+            </select>
+        </td>
+
+        <td>
+            <input type="number" name="items[@i].ETCHrs" class="form-control form-control-sm etchrs text-right" value="@item.ETCHrs" />
+        </td>
+        <td>
+            <input type="number" name="items[@i].ETCRate" class="form-control form-control-sm etcrate text-right" value="@item.ETCRate" />
+        </td>
+        <td>
+            <input type="number" name="items[@i].ETCCost" class="form-control form-control-sm etccost text-right" value="@item.ETCCost" />
+        </td>
+        <td>
+            <select name="items[@i].CurveID" class="form-control form-control-sm">
+                <option value="">-- Select Curve --</option>
+                @foreach (var curve in Model.PopupFormModel.ListCurves)
+                {
+                    var isSelected = item.CurveID == curve.CurveID ? "selected" : "";
+                    @:<option value="@curve.CurveID" @isSelected>@curve.CurveName</option>
+                }
+            </select>
+        </td>
+        <td>
+            <input type="date" name="items[@i].PlanStartWE" class="form-control" value="@item.PlanStartWE.ToString("yyyy-MM-dd")" />
+        </td>
+        <td>
+            <input type="date" name="items[@i].PlanFinishWE" class="form-control" value="@item.PlanFinishWE.ToString("yyyy-MM-dd")" />
+        </td>
+        <td>
+            <input type="text" name="items[@i].ETCComment" class="form-control form-control-sm" value="@item.ETCComment" />
+        </td>
+        <td>
+            <button type="submit" class="btn btn-sm btn-success save-inline-btn" data-id="@item.DiscEtcID">Save</button>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-secondary cancel-edit-btn" data-id="@item.DiscEtcID">Cancel</button>
+        </td>
+    </tr>
+    i++;
+}
+        </tbody>
+    </table>
+</div>
+</form>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $('#inlineEditForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const formData = $(this).serialize();
+
+            $.post('/ETC/Index1?handler=EditForm', formData)
+@*             $.post('/ETC/PMUI2?handler=EditForm', formData) *@
+                .done(function (response) {
+                    $('#editModal').modal('hide');
+                    // Optionally reload or update the PMUI2 table
+                    location.reload();
+                })
+                .fail(function () {
+                    alert('Error saving changes');
+                });
+        });
+
+        //update etc cost
+        $(document).on('input', '.etchrs, .etcrate', function () {
+            console.log('Input changed');
+
+            const $row = $(this).closest('tr');
+
+            const hrs = parseFloat($row.find('.etchrs').val()) || 0;
+            const rate = parseFloat($row.find('.etcrate').val()) || 0;
+
+            const cost = (hrs * rate).toFixed(2);
+            const $costInput = $row.find('.etccost');
+
+            $costInput.val(cost);
+
+            $costInput.toggleClass('zero-value', parseFloat(cost) === 0);
+        });
+
+        $('.editRow').each(function() {
+            const $row = $(this);
+            $row.find('input, select').each(function() {
+                const $input = $(this);
+                $input.data('original-value', $input.val());
+            });
+        });
+
+        $(document).on('click', '.cancel-edit-btn', function() {
+            const $row = $(this).closest('tr');
+            $row.find('input, select').each(function() {
+                const $input = $(this);
+                $input.val($input.data('original-value'));
+            });
+        });
+
+@*         $('#addNewBtn').on('click', function () {
+            const jobId = $('#JobID').val();
+            const empResGroupDesc = $('#EmpResGroupDesc').val();
+            console.log("jobId:", jobId, "empResGroupDesc:", empResGroupDesc);  // ✅ debug
+
+            if (!jobId || !empResGroupDesc) {
+                console.warn("Missing jobId or empResGroupDesc");
+                return;
+            }
+
+            $('#addEtcContainer').load(`/ETC/PMUI2?handler=AddETCHrsPartial&jobId=${jobId}&empResGroupDesc=${encodeURIComponent(empResGroupDesc)}`);
+
+        }); *@
+
+    });
+
+</script>
+
+
