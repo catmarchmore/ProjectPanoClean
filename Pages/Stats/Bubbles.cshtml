@@ -1,0 +1,143 @@
+﻿@page
+@model ProjectPano.Pages.Stats.BubblesModel
+@{
+	ViewData["FullWidth"] = false;
+	ViewData["Title"] = "Bubbles";
+}
+
+<h5 class="custom-h1">Bubbles</h5>
+
+<div style="display: flex; align-items: center; gap: 40px; margin-bottom: 12px;">
+    <a href="/Stats/MktIndex">Back</a>
+    <form method="get">
+        <label>Select Year: </label>
+        <select asp-for="SelectedYear" asp-items="@(new SelectList(Model.Years))" onchange="this.form.submit()"></select>
+    </form>
+</div>
+
+<br />
+
+<div id="bubbleDiv" style="width:100%;height:600px;"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // data from server
+    const raw = @Html.Raw(Model.BubbleDataJson);
+
+    // --- quadrant placement (numeric grid 0..2 on x and y) ---
+    // Quadrants: [0,1]x[1,2]=Upstream, [1,2]x[1,2]=Downstream,
+    //             [0,1]x[0,1]=Midstream, [1,2]x[0,1]=Commercial / Specialty
+    const POS = {
+      "Upstream":                { y: 1.8, xBase: 0.10 }, // top-left
+      "Downstream":              { y: 1.8, xBase: 1.20 }, // top-right
+      "Midstream":               { y: 0.80, xBase: 0.10 }, // bottom-left
+      "Commercial / Specialty":  { y: 0.80, xBase: 1.20 }  // bottom-right
+    };
+    const step = 0.12; // horizontal spacing between bubbles within a quadrant
+
+    // group by stream and compute positions
+    const groups = {};
+    raw.forEach(d => {
+      if (!groups[d.Stream]) groups[d.Stream] = [];
+      groups[d.Stream].push(d);
+    });
+
+    const pts = [];
+    Object.keys(groups).forEach(stream => {
+      const arr = groups[stream].sort((a,b) => b.Revenue - a.Revenue); // largest first
+      const { y, xBase } = POS[stream] || { y: 0.5, xBase: 0.2 };
+      arr.forEach((d, i) => {
+        pts.push({
+          x: xBase + i * step,
+          y: y-i*0.10,
+          text: `${d.ProjectType}, $${d.Revenue}k`,
+          size: Number(d.Revenue) // use raw revenue as bubble area
+        });
+      });
+    });
+
+    // --- size scaling (avoid monster bubbles) ---
+    const maxSize = pts.length ? Math.max(...pts.map(p => p.size)) : 1;
+    const desiredMaxPx = 70; // tweak 50–90 to taste
+    const sizeref = 2.0 * maxSize / (desiredMaxPx * desiredMaxPx);
+
+    const trace = {
+      x: pts.map(p => p.x),
+      y: pts.map(p => p.y),
+      text: pts.map(p => p.text),
+      mode: 'markers+text',
+      textposition: 'top center',
+      marker: {
+        sizemode: 'area',
+        sizeref: sizeref,
+        size: pts.map(p => p.size),
+        opacity: 0.9,
+        color: 'rgba(0, 136, 255, 0.8)',   // base fill
+        line: {
+          color: 'rgba(0,0,0,0.5)',
+          width: 1                        // thicker outline for 3D feel
+        }
+      },
+      hovertemplate: '%{text}<extra></extra>'
+    };
+
+    const layout = {
+        // title: 'Job Starts ' + @Model.SelectedYear,font:{size:16, family:'Arial Black'},
+        title: {
+               text:'Job Starts ' + @Model.SelectedYear,
+               font:{
+                   size:16,
+                   family:'Arial Black',
+                   color:'black'
+               }
+        },
+        plot_bgcolor: '#f5f5f5',
+        paper_bgcolor: '#999',
+        margin: { l: 20, r: 20, t: 50, b: 40 },
+        xaxis: { range: [0, 2], showgrid: false, zeroline: false, showticklabels: false },
+        yaxis: { range: [0, 2], showgrid: false, zeroline: false, showticklabels: false },
+        showlegend: false,
+
+      shapes: [
+        {type:'rect', x0:0, x1:1, y0:1, y1:2, line:{color:'#2f80ed', width:1}},
+        {type:'rect', x0:1, x1:2, y0:1, y1:2, line:{color:'#2f80ed', width:1}},
+        {type:'rect', x0:0, x1:1, y0:0, y1:1, line:{color:'#2f80ed', width:1}},
+        {type:'rect', x0:1, x1:2, y0:0, y1:1, line:{color:'#2f80ed', width:1}},
+        {type:'line', x0:1, x1:1, y0:0, y1:2, line:{color:'#2f80ed', width:1}},
+        {type:'line', x0:0, x1:2, y0:1, y1:1, line:{color:'#2f80ed', width:1}}
+      ],
+
+      annotations: [
+        {x:0.5, y:1.95, text:'Upstream', showarrow:false, font:{size:16, family:'Arial Black'}},
+        {x:1.5, y:1.95, text:'Downstream', showarrow:false, font:{size:16, family:'Arial Black'}},
+        {x:0.5, y:0.05, text:'Midstream', showarrow:false, font:{size:16, family:'Arial Black'}},
+        {x:1.5, y:0.05, text:'Commercial / Specialty', showarrow:false, font:{size:16, family:'Arial Black'}}
+      ]
+    };
+
+    Plotly.newPlot('bubbleDiv', [trace], layout);
+
+    // Add drop shadow filter to SVG
+    const svg = document.querySelector('#bubbleDiv').querySelector('svg defs')
+      || document.querySelector('#bubbleDiv').querySelector('svg').insertAdjacentHTML('afterbegin', '<defs></defs>');
+
+    const defs = document.querySelector('#bubbleDiv svg defs');
+    if (defs) {
+        defs.innerHTML = `
+            <filter id="dropshadow" height="130%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+              <feOffset dx="3" dy="3" result="offsetblur"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>`;
+    }
+
+    // Apply shadow to all markers
+    document.querySelectorAll('#bubbleDiv .scatterlayer .trace .points path').forEach(p => {
+        p.setAttribute("filter", "url(#dropshadow)");
+    });
+
+
+</script>

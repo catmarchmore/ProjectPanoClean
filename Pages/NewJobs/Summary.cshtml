@@ -1,0 +1,115 @@
+﻿@page
+@model ProjectPano.Pages.NewJobs.SummaryModel
+@{
+	ViewData["FullWidth"] = false;
+	ViewData["Title"] = "New Job Summary";
+    var distinctMonths = Model.ListNewJobs
+    .Select(j => j.myYearMonth)
+    .Distinct()
+    .OrderByDescending(x => x)
+    .ToList();
+}
+
+@* <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> *@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+@* <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> *@
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<h5 class="custom-h1">New Job Summary</h5>
+<a href="/NewJobs/Index">Return to Main New Job List</a>
+
+<br>
+<br>
+<p><a href="?">Clear Selection</a></p>
+
+<form method="get">
+    <div class="mb-3">
+        <label for="selectedMonths">Select YearMonth(s):</label>
+        <select id="selectedMonths" name="selectedMonths" multiple class="form-control" size="5">
+            @foreach (var ym in distinctMonths)
+            {
+                var isSelected = Request.Query["selectedMonths"].Contains(ym);
+                <option value="@ym" selected="@(isSelected ? "selected" : null)">@ym</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Generate Summary</button>
+</form>
+
+<hr />
+
+@{
+    var selectedMonths = Request.Query["selectedMonths"].ToList();
+
+    // Group by Status > ClientName
+    var groupedByStatus = Model.ListNewJobs
+        .Where(j => selectedMonths.Contains(j.myYearMonth))
+        .GroupBy(j => j.Status)
+        .OrderBy(s => s.Key == "Original" ? 0 : 1) // Original first
+        .ToList();
+
+    decimal grandTotal = 0;
+}
+
+@if (groupedByStatus.Any())
+{
+    <div style="max-width: 400px; margin: 0 auto;">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr style="background-color: lightskyblue">
+                <th style="width:70%; text-align: right;">Client</th>
+                <th>Type</th>
+                <th>Start Date</th>
+                <th class="text-right">Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var statusGroup in groupedByStatus)
+            {
+                decimal statusTotal = 0;
+
+                // Group again within status by ClientName
+                var groupedClients = statusGroup
+                .GroupBy(j => j.ClientName)
+                .OrderBy(g => g.Key);
+
+                <tr style="background-color: lightgray;color:MidnightBlue">
+                    <td colspan="3"><strong>@statusGroup.Key</strong></td>
+                </tr>
+
+                foreach (var clientGroup in groupedClients)
+                {
+                    var minDate = clientGroup.Min(x => x.AwardDate);
+                    var total = clientGroup.Sum(x => x.Amount);
+                    statusTotal += total;
+                    grandTotal += total;
+
+                    <tr style="background-color: whitesmoke">
+                        <td style="text-align: right;">@clientGroup.Key</td>
+                        <td>@clientGroup.First().ProjectTypeDesc</td>
+                        <td>@minDate.ToString("M/d/yyyy")</td>
+                        <td class="text-right">@total.ToString("C0")</td>
+                    </tr>
+                }
+
+                <tr style="background-color:lightskyblue">
+                    <td colspan="3"><strong>@statusGroup.Key Total</strong></td>
+                    <td class="text-right"><strong>@statusTotal.ToString("C0")</strong></td>
+                </tr>
+            }
+
+            <tr class="table-dark">
+                <td colspan="3"><strong>Grand Total</strong></td>
+                <td class="text-right"><strong>@grandTotal.ToString("C0")</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+}
+else
+{
+    <p>No data available for the selected period(s).</p>
+}
+
+

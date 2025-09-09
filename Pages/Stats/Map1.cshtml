@@ -1,0 +1,100 @@
+﻿@page
+@model ProjectPano.Pages.Stats.Map1Model
+@{
+    ViewData["FullWidth"] = false;
+    ViewData["Title"] = "Project Map";
+}
+
+<h5 class="custom-h1">Project Map</h5>
+
+<div style="display: flex; align-items: center; gap: 40px; margin-bottom: 12px;">
+    <a href="/Stats/MktIndex">Back</a>
+    <label for="metricToggle"><strong>View by:</strong></label>
+    <select id="metricToggle" class="form-select" style="width:200px; display:inline-block;">
+        <option value="JobCount">Project Count</option>
+        <option value="Revenue">Revenue ($k)</option>
+    </select>
+</div>
+
+<br />
+
+
+<div id="map" style="height:600px;"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Data from C#
+    const data = @Html.Raw(Model.ChartDataJson);
+
+    const states = data.map(d => d.StateCode);
+    const jobCounts = data.map(d => d.JobCount);
+    const revenues = data.map(d => d.Revenue);
+    const clients = data.map(d => d.Clients);
+
+    const layout = {
+        geo: {
+            scope: "usa",
+            showlakes: true,
+            lakecolor: "rgb(255,255,255)"
+        },
+        title: "Projects Awarded Since 2022"
+    };
+
+    // Function to render map by chosen metric
+    function renderMap(metric) {
+        const values = metric === "Revenue" ? revenues : jobCounts;
+        const colorbarTitle = metric === "Revenue" ? "Revenue ($k)" : "Project Count";
+
+        // Format text for the overlay labels
+        const textValues = values.map(v => {
+            if (metric === "Revenue") {
+                return "$" + v.toLocaleString() + "k";
+            } else {
+                return v.toString();
+            }
+        });
+
+        const trace = {
+            type: "choropleth",
+            locationmode: "USA-states",
+            locations: states,
+            z: values,
+            customdata: data.map(d => [d.Revenue, d.Clients]),
+            hovertemplate:
+                "State: %{location}<br>" +
+                "Job Count: %{customdata[0]}<br>" +
+                "Revenue: $%{customdata[0]:,}k<br>" +
+                "Clients: %{customdata[1]}<extra></extra>",
+            colorscale: [
+                [0, "rgb(239,243,255)"],
+                [0.5, "rgb(189,215,231)"],
+                [1, "rgb(49,130,189)"]
+            ],
+            reversescale: false,
+            colorbar: {
+                title: colorbarTitle
+            }
+        };
+
+        const textTrace = {
+            type: "scattergeo",
+            locationmode: "USA-states",
+            locations: states,
+            text:textValues,
+            // text: values.map(v => v.toString()),
+            mode: "text",
+            textfont: { size: 12, color: "black" },
+            hoverinfo: "skip"
+        };
+
+        Plotly.newPlot("map", [trace, textTrace], layout, { responsive: true });
+    }
+
+    // Initial render
+    renderMap("JobCount");
+
+    // Event listener for dropdown
+    document.getElementById("metricToggle").addEventListener("change", e => {
+        renderMap(e.target.value);
+    });
+</script>
