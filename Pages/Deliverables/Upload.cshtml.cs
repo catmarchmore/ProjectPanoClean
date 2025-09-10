@@ -46,101 +46,121 @@ namespace ProjectPano.Pages.Deliverables
                 .OrderBy(j => j.ClientJob)
                 .ToList();
 
+            // If the query parameter was supplied use it (also works when model-binding sets JobId)
             if (jobId.HasValue)
-            {
                 JobId = jobId.Value;
-                JobSelectList = new SelectList(filteredJobs, "JobID", "ClientJob", JobId);
-            }
-            else
-            {
-                // Populate without a pre-selected value
-                JobSelectList = new SelectList(filteredJobs, "JobID", "ClientJob");
-            }
 
+            // Build the SelectList — passing JobId (nullable) will pre-select if present
+            JobSelectList = new SelectList(filteredJobs, "JobID", "ClientJob", JobId);
+
+            // Debug output (will appear in console/out window)
+            //Console.WriteLine($"OnGet: param jobId={jobId}, bound JobId={JobId}, filteredJobs.Count={filteredJobs.Count}");
+
+            // If we have a job, check deliverables
             if (JobId.HasValue)
             {
-                using (var con = new SqlConnection(configuration.GetConnectionString("DBCS")))
-                using (var cmd = new SqlCommand("SELECT COUNT(*) FROM tbDeliverableHist WHERE JobID = @JobID", con))
-                {
-                    con.Open();
-                    cmd.Parameters.AddWithValue("@JobID", JobId.Value);
+                using var con = new SqlConnection(configuration.GetConnectionString("DBCS"));
+                using var cmd = new SqlCommand("SELECT COUNT(*) FROM tbDeliverableHist WHERE JobID = @JobID", con);
+                con.Open();
+                cmd.Parameters.AddWithValue("@JobID", JobId.Value);
+                int count = (int)cmd.ExecuteScalar();
+                HasDeliverables = count > 0;
+                if (HasDeliverables)
+                    DeliverableMessage = "?? Deliverable records already exist for this job. Excel upload is disabled.";
+            }
 
-                    int count = (int)cmd.ExecuteScalar();
-                    HasDeliverables = count > 0;
-
-                    if (HasDeliverables)
-                    {
-                        DeliverableMessage = "?? Deliverable records already exist for this job. Excel upload is disabled.";
-                    }
-                }
+            // If we arrived via redirect with a flash message, show it
+            if (TempData.ContainsKey("DeliverableMessage"))
+            {
+                DeliverableMessage = TempData["DeliverableMessage"]?.ToString();
             }
         }
+
+
 
         public async Task<IActionResult> OnPostUploadExcelAsync(IFormFile excelFile)
         {
             if (excelFile == null || excelFile.Length == 0)
+            {
+                DeliverableMessage = "? No file selected.";
                 return Page();
+            }
 
             var deliverables = new List<tbDeliverableHist>();
             var today = DateTime.Today;
-            var jobId = JobId.Value;
+            var jobId = JobId.GetValueOrDefault();
             CurrWeekEnding = GetWE.GetWeekEnding(today);
 
+            int skippedCount = 0;
+
+            // --- Parse Excel (same as you have) ---
             using (var stream = new MemoryStream())
             {
                 await excelFile.CopyToAsync(stream);
                 using (var workbook = new XLWorkbook(stream))
                 {
-                    var worksheet = workbook.Worksheet(1);
+                    var worksheet = workbook.Worksheet(1);               // or .Worksheet("Deliverables") if you want to require a name
                     var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // skip header
 
                     foreach (var row in rows)
                     {
-                        string myTask = row.Cell(5).GetString(); // MyTask column
+                        string myTask = row.Cell(5).GetString()?.Trim().ToUpper();
+                        //Console.WriteLine($"Row {row.RowNumber()}: myTask='{myTask}' (length={myTask?.Length})");
+                        //Console.WriteLine($"Row {row.RowNumber()}: myTask='{myTask}'");
+
                         var obidResult = dal.LookupOBID(jobId, myTask, configuration);
+                        if (obidResult == null)
+                        {
+                            // collect/skipped if you want - here we just skip
+                            skippedCount++;
+                            continue;
+                        }
+
                         decimal obhrs = obidResult.Value.OB_HRS;
                         decimal obcost = obidResult.Value.OB_COST;
-                        decimal delRate= obhrs != 0 ? obcost/obhrs : 0;
+                        decimal delRate = obhrs != 0 ? obcost / obhrs : 0;
 
                         deliverables.Add(new tbDeliverableHist
                         {
                             JobID = jobId,
                             OBID = obidResult.Value.OBID,
                             DelGp1 = row.Cell(1).GetString(),
-                            DelGp2=row.Cell(2).GetString(),
-                            DelGp3=row.Cell(3).GetString(),
+                            DelGp2 = row.Cell(2).GetString(),
+                            DelGp3 = row.Cell(3).GetString(),
                             DelGp4 = row.Cell(4).GetString(),
                             DelName = row.Cell(6).GetString(),
                             DelComment = row.Cell(7).GetString(),
                             DelHours = row.Cell(8).GetValue<decimal>(),
-                            DelCost = delRate* row.Cell(8).GetValue<decimal>(),
+                            DelCost = delRate * row.Cell(8).GetValue<decimal>(),
                             Direct = row.Cell(9).GetValue<bool>(),
                             Created = DateTime.Now,
-                            Modified=DateTime.Now,
-                            DelPctCumul=0,
-                            DelEarnedHrs=0,
-                            DelEarnedCost=0,
-                            ProgressDate= CurrWeekEnding,
-                            DirPct=0,
-                            DelNum=null,
-                            PlanStartDate=null,
-                            PlanFinishDate=null,
-                            ActFinishDate=null,
-                            FcastFinishDate=null,
-                            DelRev=null
+                            Modified = DateTime.Now,
+                            DelPctCumul = 0,
+                            DelEarnedHrs = 0,
+                            DelEarnedCost = 0,
+                            ProgressDate = CurrWeekEnding,
+                            DirPct = 0,
+                            DelNum = null,
+                            PlanStartDate = null,
+                            PlanFinishDate = null,
+                            ActFinishDate = null,
+                            FcastFinishDate = null,
+                            DelRev = null
                         });
                     }
                 }
             }
 
-            // Now save to DB via ADO.NET
+            // --- Insert with ADO.NET, count inserted rows ---
+            int insertedCount = 0;
+
             using (var conn = new SqlConnection(configuration.GetConnectionString("DBCS")))
             {
                 await conn.OpenAsync();
 
                 foreach (var d in deliverables)
                 {
-                    var cmd = new SqlCommand(@"
+                    using var cmd = new SqlCommand(@"
                 INSERT INTO tbDeliverableHist
                 (JobID, OBID, DelGp1, DelGp2, DelGp3, DelGp4, DelName, DelComment,
                  DelHours, DelCost, Direct, Created, Modified,
@@ -153,6 +173,7 @@ namespace ProjectPano.Pages.Deliverables
                  @DirPct, @DelNum, @PlanStartDate, @PlanFinishDate, @ActFinishDate, @FcastFinishDate, @DelRev);
             ", conn);
 
+                    // explicit param typing for decimals/dates to avoid AddWithValue pitfalls
                     cmd.Parameters.AddWithValue("@JobID", d.JobID);
                     cmd.Parameters.AddWithValue("@OBID", d.OBID);
                     cmd.Parameters.AddWithValue("@DelGp1", (object?)d.DelGp1 ?? DBNull.Value);
@@ -161,41 +182,53 @@ namespace ProjectPano.Pages.Deliverables
                     cmd.Parameters.AddWithValue("@DelGp4", (object?)d.DelGp4 ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelName", (object?)d.DelName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelComment", (object?)d.DelComment ?? DBNull.Value);
+
                     cmd.Parameters.Add("@DelHours", SqlDbType.Decimal).Value = d.DelHours;
                     cmd.Parameters.Add("@DelCost", SqlDbType.Decimal).Value = d.DelCost;
+
                     cmd.Parameters.AddWithValue("@Direct", d.Direct);
-                    cmd.Parameters.Add("@Created", SqlDbType.DateTime).Value = d.Created;
-                    cmd.Parameters.Add("@Modified", SqlDbType.DateTime).Value = d.Modified;
+                    cmd.Parameters.Add("@Created", SqlDbType.DateTime).Value = (object?)d.Created ?? DBNull.Value;
+                    cmd.Parameters.Add("@Modified", SqlDbType.DateTime).Value = (object?)d.Modified ?? DBNull.Value;
+
                     cmd.Parameters.AddWithValue("@DelPctCumul", d.DelPctCumul);
                     cmd.Parameters.AddWithValue("@DelEarnedHrs", d.DelEarnedHrs);
                     cmd.Parameters.AddWithValue("@DelEarnedCost", d.DelEarnedCost);
-                    cmd.Parameters.Add("@ProgressDate", SqlDbType.Date).Value = d.ProgressDate;
+
+                    cmd.Parameters.Add("@ProgressDate", SqlDbType.Date).Value = (object?)d.ProgressDate ?? DBNull.Value;
                     cmd.Parameters.AddWithValue("@DirPct", d.DirPct);
                     cmd.Parameters.AddWithValue("@DelNum", (object?)d.DelNum ?? DBNull.Value);
+
                     cmd.Parameters.Add("@PlanStartDate", SqlDbType.Date).Value = (object?)d.PlanStartDate ?? DBNull.Value;
                     cmd.Parameters.Add("@PlanFinishDate", SqlDbType.Date).Value = (object?)d.PlanFinishDate ?? DBNull.Value;
                     cmd.Parameters.Add("@ActFinishDate", SqlDbType.Date).Value = (object?)d.ActFinishDate ?? DBNull.Value;
                     cmd.Parameters.Add("@FcastFinishDate", SqlDbType.Date).Value = (object?)d.FcastFinishDate ?? DBNull.Value;
 
-                    //cmd.Parameters.AddWithValue("@PlanFinishDate", (object?)d.PlanFinishDate ?? DBNull.Value);
-                    //cmd.Parameters.AddWithValue("@ActFinishDate", (object?)d.ActFinishDate ?? DBNull.Value);
-                    //cmd.Parameters.AddWithValue("@FcastFinishDate", (object?)d.FcastFinishDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelRev", (object?)d.DelRev ?? DBNull.Value);
 
                     try
                     {
-                        await cmd.ExecuteNonQueryAsync();
+                        insertedCount += await cmd.ExecuteNonQueryAsync();
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
-                        DeliverableMessage = $"? Insert failed: {ex.Message}";
-                        return Page(); // redisplay with the error message
+                        // stamp the error in TempData and redirect back so OnGet can show it
+                        //TempData["DeliverableMessage"] = $"? Insert failed: {ex.Message}";
+                        //Console.WriteLine($"Insert failed: {ex}"); // server-side debug
+                        TempData["DeliverableMessage"] = $"Read {deliverables.Count} deliverables from Excel. Skipped {skippedCount}.";
+                        return RedirectToPage("/Deliverables/Upload", new { jobId = jobId });
                     }
                 }
             }
 
+            // Use TempData so message survives redirect
+            //TempData["DeliverableMessage"] = $"? {insertedCount} deliverable record(s) inserted successfully.";
+            TempData["DeliverableMessage"] = $"Read {deliverables.Count} deliverables from Excel. Skipped {skippedCount}.";
+
+            //Console.WriteLine($"OnPost: insertedCount={insertedCount}, redirecting with jobId={jobId}");
+
             return RedirectToPage("/Deliverables/Upload", new { jobId = jobId });
         }
+
 
     }
 }

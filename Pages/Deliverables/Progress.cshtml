@@ -1,0 +1,47 @@
+﻿@page
+@using System.Linq
+@using System.Text.Json
+@using ProjectPano
+@using ProjectPano.Model
+@using static ProjectPano.Model.DAL
+@model ProjectPano.Pages.Deliverables.ProgressModel
+
+@{
+    ViewData["FullWidth"] = true;
+    ViewData["Title"] = "Assign Progress";
+}
+
+<a href="/Deliverables/Options">Back</a>
+<br />
+<br />
+
+<h5 class="custom-h1">Assign Progress</h5>
+
+<div class="d-flex align-items-center mb-2">
+    <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
+
+    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true"
+            style="width:700px;" asp-for="JobId" asp-items="Model.JobSelectList">
+        <option value="">-- Select job --</option>
+    </select>
+</div>
+<br />
+<br />
+
+@section Scripts {
+    <script>
+        $(function () {
+            // ensure selectpicker is initialized (after jquery + bootstrap-select load in _Layout)
+            $('#jobDropdown').selectpicker();
+
+            // when the user picks a job, navigate and pass jobId as querystring
+            $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                const selectedJobId = $(this).val();
+                if (selectedJobId) {
+                    // use normal redirect (causes a new GET, firing OnGetAsync)
+                    window.location.href = `/Deliverables/Progress?jobId=${selectedJobId}`;
+                }
+            });
+        });
+    </script>
+}

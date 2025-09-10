@@ -352,24 +352,31 @@ namespace ProjectPano.Model
         {
             using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
             {
-                string query = @"SELECT OBID, OB_HRS, OB_COST 
+                string query = @"SELECT OBID, CURRHRS, CURRCOST 
                          FROM vwBudgetActuals_REVISED 
-                         WHERE JobID = @JobID AND MYTASK = @myTask";
+                         WHERE JobID = @JobID 
+                           AND RTRIM(LTRIM(UPPER(MYTASK))) = @myTask";
 
                 using (SqlCommand cmd = new SqlCommand(query, con))
                 {
+                    string normalizedTask = myTask?
+                        .Trim()
+                        .Replace("\u00A0", " ") // replace non-breaking space with regular space
+                        .ToUpper();
+
+                    //Console.WriteLine($"LookupOBID: jobId={jobId}, normalizedTask='{normalizedTask}' (len={normalizedTask?.Length})");
+
                     cmd.Parameters.AddWithValue("@JobID", jobId);
-                    cmd.Parameters.AddWithValue("@myTask", myTask);
+                    cmd.Parameters.AddWithValue("@myTask", normalizedTask ?? string.Empty);
 
                     con.Open();
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            // explicitly cast values to match tuple signature
                             int obid = reader["OBID"] != DBNull.Value ? Convert.ToInt32(reader["OBID"]) : 0;
-                            decimal obhrs = reader["OB_HRS"] != DBNull.Value ? Convert.ToDecimal(reader["OB_HRS"]) : 0m;
-                            decimal obcost = reader["OB_COST"] != DBNull.Value ? Convert.ToDecimal(reader["OB_COST"]) : 0m;
+                            decimal obhrs = reader["CURRHRS"] != DBNull.Value ? Convert.ToDecimal(reader["CURRHRS"]) : 0m;
+                            decimal obcost = reader["CURRCOST"] != DBNull.Value ? Convert.ToDecimal(reader["CURRCOST"]) : 0m;
 
                             return (obid, obhrs, obcost);
                         }
@@ -379,6 +386,8 @@ namespace ProjectPano.Model
 
             return null; // no row found
         }
+
+
 
 
         public List<vwBudgetActuals_REVISED> GetVWBudgetActuals(int jobId, IConfiguration configuration)
@@ -2202,6 +2211,54 @@ namespace ProjectPano.Model
                         DelGp2 = reader.IsDBNull(reader.GetOrdinal("DelGp2")) ? null : reader.GetString(reader.GetOrdinal("DelGp2")),
                         DelGp3 = reader.IsDBNull(reader.GetOrdinal("DelGp3")) ? null : reader.GetString(reader.GetOrdinal("DelGp3")),
                         DelGp4 = reader.IsDBNull(reader.GetOrdinal("DelGp4")) ? null : reader.GetString(reader.GetOrdinal("DelGp4")),
+                    };
+                }
+
+                reader.Close();
+            }
+
+            return deliverable;
+        }
+
+        public vwDeliverableHist GetDeliverableByJobId(int jobId, DateTime myWE,IConfiguration configuration)
+        {
+            vwDeliverableHist deliverable = null;
+
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
+            {
+                string query = "SELECT * FROM vwDeliverableHist WHERE JobID = @JobID and ProgressDate=@myWE";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@JobID", jobId);
+                cmd.Parameters.AddWithValue("@myWE", myWE);
+
+                con.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    deliverable = new vwDeliverableHist
+                    {
+                        DeliverableID = reader.GetInt32(reader.GetOrdinal("DeliverableID")),
+                        JobID = reader.GetInt32(reader.GetOrdinal("JobID")),
+                        OBID = reader.GetInt32(reader.GetOrdinal("OBID")),
+                        myTask = reader.IsDBNull(reader.GetOrdinal("myTask")) ? null : reader.GetString(reader.GetOrdinal("myTask")),
+                        DelGp1 = reader.IsDBNull(reader.GetOrdinal("DelGp1")) ? null : reader.GetString(reader.GetOrdinal("DelGp1")),
+                        DelGp2 = reader.IsDBNull(reader.GetOrdinal("DelGp2")) ? null : reader.GetString(reader.GetOrdinal("DelGp2")),
+                        DelGp3 = reader.IsDBNull(reader.GetOrdinal("DelGp3")) ? null : reader.GetString(reader.GetOrdinal("DelGp3")),
+                        DelGp4 = reader.IsDBNull(reader.GetOrdinal("DelGp4")) ? null : reader.GetString(reader.GetOrdinal("DelGp4")),
+                        DelName = reader.IsDBNull(reader.GetOrdinal("DelName")) ? null : reader.GetString(reader.GetOrdinal("DelName")),
+                        DelComment = reader.IsDBNull(reader.GetOrdinal("DelComment")) ? null : reader.GetString(reader.GetOrdinal("DelComment")),
+                        DelHours = reader.IsDBNull(reader.GetOrdinal("DelHours")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelHours")),
+                        DelCost = reader.IsDBNull(reader.GetOrdinal("DelCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelCost")),
+                        DelPctCumul = reader.IsDBNull(reader.GetOrdinal("DelPctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelPctCumul")),
+                        DelEarnedHrs = reader.IsDBNull(reader.GetOrdinal("DelEarnedHrs")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelEarnedHrs")),
+                        DelEarnedCost = reader.IsDBNull(reader.GetOrdinal("DelEarnedCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelEarnedCost")),
+                        ProgressDate = reader.IsDBNull(reader.GetOrdinal("ProgressDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("ProgressDate")),
+                        Direct=reader.GetBoolean(reader.GetOrdinal("Direct")),
+                        DirPct = reader.IsDBNull(reader.GetOrdinal("DirPct")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DirPct")),
+                        PlanFinishDate = reader.IsDBNull(reader.GetOrdinal("PlanFinishDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanFinishDate")),
+                        PlanStartDate = reader.IsDBNull(reader.GetOrdinal("PlanStartDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanStartDate")),
+
                     };
                 }
 

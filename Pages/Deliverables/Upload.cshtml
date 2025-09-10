@@ -15,23 +15,33 @@
 <br />
 <br />
 
-<h5 class="custom-h1">Upload Deliverables</h5>
+<h5 class="custom-h1">Upload Initial Deliverables</h5>
+
+@if (TempData["UploadMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["UploadMessage"]</div>
+}
+
 
 <div class="d-flex align-items-center mb-2">
     <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
-    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true" style="width: 700px;" 
-        asp-for="JobId" asp-items="Model.JobSelectList">
-        <option value="">--Select Job --</option>
+
+    <select id="jobDropdown" class="selectpicker form-control" data-live-search="true"
+            style="width:700px;" asp-for="JobId" asp-items="Model.JobSelectList">
+        <option value="">-- Select job --</option>
     </select>
+
+@*     <div class="ml-3">
+        <p class="mb-0"><strong>Selected JobId:</strong> @Model.JobId</p>
+        <p class="mb-0"><strong>Deliverables exist:</strong> @Model.HasDeliverables</p>
+    </div> *@
 </div>
 <br />
 <br />
 
-@if (Model.HasDeliverables)
+@if (!string.IsNullOrEmpty(Model.DeliverableMessage))
 {
-    <div class="alert alert-warning">
-        @Model.DeliverableMessage
-    </div>
+    <div class="alert alert-info">@Model.DeliverableMessage</div>
 
     <!-- Upload form disabled -->
     <form>
@@ -47,29 +57,32 @@
 else
 {
     <!-- Upload form enabled -->
-    <form method="post" enctype="multipart/form-data">
+    <form id="uploadForm" method="post" enctype="multipart/form-data" asp-page-handler="UploadExcel">
         <div class="form-group">
             <label for="excelFile">Upload Excel</label>
-            <input type="file" name="excelFile" class="form-control" id="excelFile" />
+            <input type="file" class="form-control" id="excelFile" name="excelFile" />
         </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
+        <button type="submit" class="btn btn-primary" @(Model.HasDeliverables ? "disabled" : "")>Upload</button>
+        <input type="hidden" asp-for="JobId" />
     </form>
+
 }
 
 @section Scripts {
+    <script>
+        $(function () {
+            // ensure selectpicker is initialized (after jquery + bootstrap-select load in _Layout)
+            $('#jobDropdown').selectpicker();
 
-<script>
-    $(document).ready(function () {
-        // Tell bootstrap-select to re-read the selected <option>
-        $('#jobDropdown').selectpicker('render');
-
-        $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-            const selectedJobId = $(this).val();
-            if (selectedJobId) {
-                window.location.href = `/Deliverables/Upload?jobId=${selectedJobId}`;
-            }
+            // when the user picks a job, navigate and pass jobId as querystring
+            $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                const selectedJobId = $(this).val();
+                if (selectedJobId) {
+                    // use normal redirect (causes a new GET, firing OnGetAsync)
+                    window.location.href = `/Deliverables/Upload?jobId=${selectedJobId}`;
+                }
+            });
         });
-    });
-</script>
+    </script>
 }
 

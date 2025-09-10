@@ -176,6 +176,49 @@
             return { ohLine, ohOtLine };
         }
 
+        //trying to get max of the y axes so they both match
+    const syncY2Plugin = {
+      id: "syncY2Plugin",
+      beforeLayout(chart) {
+        const yScale = chart.scales["y"];
+        const y2Scale = chart.scales["y2"];
+        const selectedGroup = chart.options.plugins.selectedGroup;
+
+        if (yScale && y2Scale) {
+          if (selectedGroup) {
+            // --- Compute true stacked max for Y ---
+            const stackedMax = chart.data.labels.map((_, i) => {
+              return chart.data.datasets
+                .filter(ds => ds.yAxisID === "y" && chart.isDatasetVisible(ds.index))
+                .reduce((sum, ds) => sum + (Number(ds.data[i]) || 0), 0);
+            });
+            const yMax = stackedMax.length > 0 ? Math.max(...stackedMax) : 0;
+
+            // --- Compute true max for Y2 (non-stacked) ---
+            const y2Values = chart.data.datasets
+              .filter(ds => ds.yAxisID === "y2" && chart.isDatasetVisible(ds.index))
+              .flatMap(ds => ds.data.map(v => Number(v) || 0));
+            const y2Max = y2Values.length > 0 ? Math.max(...y2Values) : 0;
+
+            // --- Take the larger, round up to nearest 100 ---
+            let unifiedMax = Math.max(yMax, y2Max, 0);
+            unifiedMax = Math.ceil(unifiedMax / 100) * 100;
+
+            // Apply to both axes
+            yScale.options.max = unifiedMax || undefined;
+            y2Scale.options.max = unifiedMax || undefined;
+          } else {
+            // Default case: lock both to 2500
+            yScale.options.max = 2500;
+            y2Scale.options.max = 2500;
+          }
+        }
+      }
+    };
+
+
+
+
         function buildChart(selectedGroup = null) {
             const filteredData = selectedGroup
                 ? rawData.filter(r => r.EmpResGroupDesc === selectedGroup)
@@ -273,9 +316,31 @@
                 }
                 );
 
+    // --- NEW: compute true maxima from the arrays you used to build the chart ---
+    // stackedTotals: per-week total of the stacked bar values
+    const stackedTotals = labels.map(week => {
+      return statusOrder.reduce((sum, status) => sum + (groupedStatusData[week]?.[status] ?? 0), 0);
+    });
+    const yMax = stackedTotals.length ? Math.max(...stackedTotals) : 0;
+    const y2Max = ohLine.length ? Math.max(...ohLine) : 0;
+
+    // choose bigger and round up to nearest 100 when a group is selected
+    let unifiedMax;
+    if (selectedGroup) {
+      unifiedMax = Math.max(yMax, y2Max, 0);
+      unifiedMax = Math.ceil(unifiedMax / 100) * 100;
+      if (unifiedMax === 0) unifiedMax = undefined; // let chart auto-scale if everything is zero
+    } else {
+      unifiedMax = 2500; // global cap when "All groups" selected
+    }
+
+    // debug output so you can see what's happening
+    console.log('stacked y max:', yMax, 'y2 (capacity) max:', y2Max, '=> unifiedMax:', unifiedMax);
+
 
             Chart.register(ChartDataLabels);
             Chart.register(highlightActualsPlugin);
+            Chart.register(syncY2Plugin);
 
             return new Chart(ctxStatus, {
                 type: 'bar',
@@ -291,6 +356,7 @@
                         intersect: false
                     },
                     plugins: {
+                        selectedGroup:selectedGroup,
                         title: {
                             display: true,
                             text: selectedGroup
@@ -341,15 +407,15 @@
                         y: {
                             stacked: true,
                             beginAtZero:true,
-                            max:2500,
+                            max:unifiedMax,  // 👈 auto-scale if filtered,
                             title: { display: true, text: 'Hours' }
                         },
                         y2: {
                             stacked: false,
-                            display:false,
+                            display:true,
                             position:'right',
                             beginAtZero:true,
-                            max:2500,
+                            max:unifiedMax,
                             title: { display: true, text: 'Capacity Lines' }
                         }
                     }

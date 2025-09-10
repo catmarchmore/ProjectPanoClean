@@ -697,3 +697,4 @@ C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\obj\Debug\ne
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\obj\Debug\net9.0\ProjectPano.pdb
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\obj\Debug\net9.0\ProjectPano.genruntimeconfig.cache
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\obj\Debug\net9.0\ref\ProjectPano.dll
+C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\obj\Debug\net9.0\ProjectPano.sourcelink.json
