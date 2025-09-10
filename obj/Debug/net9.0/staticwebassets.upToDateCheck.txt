@@ -67,7 +67,6 @@ wwwroot\lib\jquery\dist\jquery.slim.min.js
 wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\css\select2-bootstrap4.min.css
-C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\jquery\LICENSE.txt
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\css\site.css
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\favicon.ico
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\js\site.js
@@ -129,3 +128,4 @@ C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\jquery\dist\jquery.slim.js
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\jquery\dist\jquery.slim.min.js
 C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\jquery\dist\jquery.slim.min.map
+C:\Users\catherine.moritz\source\repos\ProjectPanoClean\ProjectPano\wwwroot\lib\jquery\LICENSE.txt

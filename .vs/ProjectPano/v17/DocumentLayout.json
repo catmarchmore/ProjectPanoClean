@@ -48,7 +48,7 @@
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Progress.cshtml",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml",
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-09T23:48:59.821Z",
               "EditorCaption": ""
@@ -63,8 +63,7 @@
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAAowBQAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T23:49:04.817Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T23:49:04.817Z"
             },
             {
               "$type": "Document",
@@ -76,8 +75,7 @@
               "RelativeToolTip": "Pages\\Deliverables\\Upload.cshtml",
               "ViewState": "AgIAADwAAAAAAAAAAAAAAEYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-09T23:48:32.345Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T23:48:32.345Z"
             },
             {
               "$type": "Document",
@@ -89,8 +87,7 @@
               "RelativeToolTip": "Pages\\Deliverables\\Upload.cshtml.cs",
               "ViewState": "AgIAACEAAAAAAAAAAAA4wCkAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T23:48:31.481Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T23:48:31.481Z"
             },
             {
               "$type": "Document",
@@ -102,8 +99,7 @@
               "RelativeToolTip": "Model\\DAL.cs",
               "ViewState": "AgIAALgIAAAAAAAAAAAQwMAIAABcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T19:32:46.512Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T19:32:46.512Z"
             }
           ]
         },
