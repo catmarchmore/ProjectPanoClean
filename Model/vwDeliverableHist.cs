@@ -28,6 +28,8 @@
         public DateTime? PlanStartDate { get; set; }
         public string? DelNum { get; set; }
         public string? DelRev { get; set; }
+        public decimal CURRHRS { get; set; }
+        public decimal CURRCOST { get; set; }
 
     }
 }

@@ -41,6 +41,10 @@ namespace ProjectPano.Pages.Deliverables
 
         [BindProperty]
         public tbDeliverableHist? NewDeliverable { get; set; }
+        [BindProperty]
+        public decimal DirPct { get; set; }
+
+        public List<vwBudgetActuals_REVISED> vwBudgetActuals { get; set; } = new List<vwBudgetActuals_REVISED>();
 
         public void OnGet(int? JobId)
         {
@@ -55,16 +59,35 @@ namespace ProjectPano.Pages.Deliverables
                 .ToList();
             JobSelectList = new SelectList(filteredJobs, "JobID", "ClientJob", JobId);
 
+            vwBudgetActuals = new List<vwBudgetActuals_REVISED>();
+
             if (JobId.HasValue)
             {
-                var dates = dal.GetProgressDatesByJob(JobId.Value, configuration);
-                ProgressDateSelectList = new SelectList(dates, ProgressDate);
+                vwBudgetActuals = dal.GetVWBudgetActuals(JobId.Value, configuration);
+
+                var dates = dal.GetProgressDatesByJob(JobId.Value, configuration)
+                               .OrderByDescending(d => d)
+                               .ToList();
+
+                // If no ProgressDate was supplied, default to the latest one
+                if (!ProgressDate.HasValue && dates.Any())
+                {
+                    ProgressDate = dates.First(); // newest date
+                }
+
+                ProgressDateSelectList = new SelectList(
+                    dates,
+                    ProgressDate // this sets the selected value
+                );
 
                 if (ProgressDate.HasValue)
                 {
-                    Deliverables = dal.GetDeliverablesByJobAndDate(JobId.Value, ProgressDate.Value, configuration);
+                    Deliverables = dal.GetDeliverablesByJobAndDate(
+                        JobId.Value, ProgressDate.Value, configuration
+                    );
                 }
             }
+
         }
 
         public IActionResult OnPost(int? jobId, int? deleteId, int? editId, int? addNew)
@@ -81,7 +104,7 @@ namespace ProjectPano.Pages.Deliverables
                 NewDeliverable.JobID = jobId.Value;
                 NewDeliverable.ProgressDate = ProgressDate;
 
-                dal.InsertDeliverableHist(NewDeliverable, configuration);
+                dal.InsertDeliverableHist(NewDeliverable,ProgressDate.Value, configuration);
                 return RedirectToPage(new { JobId, ProgressDate });
             }
 
@@ -89,6 +112,8 @@ namespace ProjectPano.Pages.Deliverables
             {
                 foreach (var d in Deliverables)
                 {
+                    d.DirPct = DirPct;
+                    d.ProgressDate = ProgressDate;
                     dal.UpdateDeliverableHist(d, configuration);
                 }
             }

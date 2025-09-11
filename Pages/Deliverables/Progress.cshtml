@@ -52,8 +52,10 @@
                     <th>Hours</th>
                     <th>Cost</th>
                     <th>Cumul<br />% Complete</th>
-                    <th>Earned Hrs</th>
+                    <th>Comment</th>
                     <th>Earned Cost</th>
+                    <th>TASK HRS</th>
+                    <th>TASK COST</th>
                     <th>DirPct</th>
                     <th></th>
                 </tr>
@@ -69,13 +71,41 @@
                         </td>
 
                         <td><input asp-for="Deliverables[@i].Direct" type="checkbox" /></td>
-                        <td>@d.myTask<input type="hidden" asp-for="Deliverables[@i].DeliverableID" /></td>
-                        <td><input asp-for="Deliverables[@i].DelName" class="form-control" /></td>
-                        <td><input asp-for="Deliverables[@i].DelHours" class="form-control text-end" /></td>
+
+                        @* <td>@d.myTask<input type="hidden" asp-for="Deliverables[@i].DeliverableID" /></td> *@
+
                         <td>
-                            @d.DelCost.ToString("C2")
-                            <input type="hidden" asp-for="Deliverables[@i].DelCost" />
+                            <select class="form-control" asp-for="Deliverables[@i].OBID">
+                                <option value="">-- Select Task --</option>
+                                @foreach (var task in Model.vwBudgetActuals)
+                                {
+                                    <option value="@task.OBID" selected="@(task.OBID == d.OBID)">
+                                        @task.MYTASK
+                                    </option>
+                                }
+                            </select>
+                            <input type="hidden" asp-for="Deliverables[@i].DeliverableID" />
+                            <input type="hidden" asp-for="Deliverables[@i].myTask"
+                                   value="@Model.vwBudgetActuals.FirstOrDefault(t => t.OBID == d.OBID)?.MYTASK" />
+                            <!-- ✅ Hidden MYTASK column for search -->
+                            <span class="search-mytask" style="display:none;">
+                                @Model.vwBudgetActuals.FirstOrDefault(t => t.OBID == d.OBID)?.MYTASK
+                            </span>
                         </td>
+
+                        <td><input asp-for="Deliverables[@i].DelName" class="form-control" /></td>
+
+                        <td>
+                            <input asp-for="Deliverables[@i].DelHours"
+                                   class="form-control text-end delHrs" />
+                        </td>
+
+                        <td>
+                            <input type="hidden" asp-for="Deliverables[@i].DelCost"
+                                   class="delCost" />
+                            <input type="text" class="form-control text-end delCostDisplay" readonly />
+                        </td>
+
                         <td>
                             <!-- Visible % Complete (0–100) -->
                             <input type="number"
@@ -83,7 +113,8 @@
                                    min="0"
                                    max="100"
                                    step="1"
-                                   value="@(d.DelPctCumul * 100)" />
+                                   value="@(d.DelPctCumul * 100)"
+                                   @(d.Direct == false ? "disabled" : "") />
 
                             <!-- Hidden decimal value for posting -->
                             <input type="hidden"
@@ -91,12 +122,8 @@
                                    asp-for="Deliverables[@i].DelPctCumul" />
                         </td>
 
-                        <td>
-                            <!-- Visible earned hours, updates via JS -->
-                            @* <input type="text" class="form-control text-end earnedHrs" readonly value="@(d.DelHours* d.DelPctCumul).ToString(" F2")" /> *@
-                            <input type="text" class="form-control earnedHrs text-end" readonly /> <!-- Earned Hrs -->
-                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs" value="@(d.DelHours* d.DelPctCumul)" />
-                        </td>
+                        <td><input asp-for="Deliverables[@i].DelComment" class="form-control" /></td>
+
                         <td>
                             <!-- Visible earned cost, updates via JS -->
                             @* <input type="text" class="form-control text-end earnedCost" readonly value="@(d.DelCost* d.DelPctCumul).ToString(" F2")" /> *@
@@ -104,10 +131,26 @@
                             <input type="hidden" asp-for="Deliverables[@i].DelEarnedCost" value="@(d.DelCost* d.DelPctCumul)" />
                         </td>
 
-                        <!-- Delete -->
+                        <td>
+                            <input asp-for="Deliverables[@i].CURRHRS"
+                                   class="form-control text-end budgetHrs"
+                                   readonly />
+                        </td>
+                        <td>
+                            <input asp-for="Deliverables[@i].CURRCOST"
+                                   class="form-control text-end budgetCost"
+                                   readonly />
+                        </td>
+
+
+                        <td>DIRPCT</td>
+
+                        <!-- Delete Button -->
                         <td>
                             <button type="submit" name="deleteId" value="@d.DeliverableID" class="btn btn-sm btn-danger">Delete</button>
                         </td>
+
+                        <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs" value="@(d.DelHours* d.DelPctCumul)" />
                     </tr>
                 }
 
@@ -115,15 +158,49 @@
                 <tr>
                     <td><span class="text-muted">New</span></td>
                     <td><input type="checkbox" name="NewDeliverable.Direct" /></td>
-                    <td><input type="text" name="NewDeliverable.myTask" class="form-control" /></td>
+
+                    <td>
+                        <select class="form-control" name="NewDeliverable.OBID">
+                            <option value="">-- Select Task --</option>
+                            @foreach (var task in Model.vwBudgetActuals)
+                            {
+                                <option value="@task.OBID">@task.MYTASK</option>
+                            }
+                        </select>
+                    </td>
+
                     <td><input type="text" name="NewDeliverable.DelName" class="form-control" /></td>
                     <td><input type="number" name="NewDeliverable.DelHours" class="form-control text-end" /></td>
-                    <td><input type="number" name="NewDeliverable.DelCost" class="form-control text-end" /></td>
+
+                    <td>
+                        <!-- Hidden input: bound to model -->
+                        <input type="hidden" name="NewDeliverable.DelCost" id="newDelCost" />
+
+                        <!-- Display only -->
+                        <input type="text" id="newDelCostDisplay" class="form-control text-end" readonly />
+                    </td>
+
                     <td><input type="number" step="1" name="NewDeliverable.DelPctCumul" class="form-control text-end" /></td>
+                    <td><input type="text" name="NewDeliverable.DelComment" class="form-control" /></td>
                     <td colspan="3">
                         <button type="submit" name="addNew" value="1" class="btn btn-sm btn-success">Add</button>
                     </td>
+
+                    <td><input type="hidden" name="NewDeliverable.DelEarnedCost" value="0" /></td>
+                    <td><input type="hidden" name="NewDeliverable.DelEarnedHrs" value="0" /></td>
+                    @* <input type="hidden" asp-for="NewDeliverable.ProgressDate" /> *@
+
+
+
+
+
+                    <td>
+                        <!-- Support budget validation -->
+                        <input id="newBudgetHrs" class="budgetHrs" type="hidden" />
+                        <input id="newBudgetCost" class="budgetCost" type="hidden" />
+                    </td>
                 </tr>
+
             </tbody>
 
             <tfoot class="fw-bold">
@@ -132,13 +209,17 @@
                     <td id="totalHours" class="text-end">0</td>
                     <td id="totalCost" class="text-end">0</td>
                     <td id="totalCumulPct" class="text-end">0%</td>
-                    <td id="totalEarnedHrs" class="text-end">0</td>
+                    <td></td>
                     <td id="totalEarnedCost" class="text-end">0</td>
+                    <td></td>
+                    <td></td>
                     <td id="dirPctFooter" class="text-end">0%</td>
                 </tr>
             </tfoot>
 
         </table>
+        <input type="hidden" asp-for="DirPct" id="dirPctInput" />
+
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
 }
@@ -165,20 +246,6 @@
                 }
             });
 
-            // --- Filter rows ---
-            $("#filterBox").on("keyup", function () {
-                const value = $(this).val().toLowerCase();
-
-                $("#deliverablesTable tbody tr").filter(function () {
-                    // optionally, search only Task + DelName
-                    const task = $(this).find("td:nth-child(3)").text().toLowerCase();
-                    const name = $(this).find("td:nth-child(4) input").val()?.toLowerCase() || "";
-                    $(this).toggle(task.indexOf(value) > -1 || name.indexOf(value) > -1);
-                });
-
-                recalcTotals();
-            });
-
             // --- Totals and DirPct calculation ---
         function recalcTotals() {
             let totalHours = 0, totalCost = 0, totalEarnedHrs = 0, totalEarnedCost = 0;
@@ -201,6 +268,7 @@
 
             const dirPct = dirCost === 0 ? 0 : dirEarned / dirCost;
             $("#dirPctFooter").text((dirPct * 100).toFixed(1) + "%");
+            $("#dirPctInput").val(dirPct);
 
             // --- Second pass: calculate totals for visible rows & update earned values ---
             $("#deliverablesTable tbody tr:visible").each(function () {
@@ -237,21 +305,180 @@
             $("#totalEarnedHrs").text(totalEarnedHrs.toFixed(2));
             $("#totalEarnedCost").text(totalEarnedCost.toFixed(2));
             $("#totalCumulPct").text(totalCost === 0 ? "0%" : ((totalEarnedCost / totalCost) * 100).toFixed(1) + "%");
+
+            checkBudgetMatch();
+            checkBudgetConsistency();
         }
+
+        function checkBudgetMatch() {
+            let obidTotals = {};
+
+            // Gather sums by OBID/MyTask
+            $("#deliverablesTable tbody tr").each(function () {
+                if ($(this).find("button[name='addNew']").length) return;
+
+                const obid = $(this).find("input[name*='OBID']").val();
+                const myTask = $(this).find("input[name*='MYTASK']").val();
+                const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
+                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+
+                const key = obid + "|" + myTask;
+                if (!obidTotals[key]) {
+                    obidTotals[key] = { hrs: 0, cost: 0, budgetHrs: 0, budgetCost: 0, rows: [] };
+                }
+                obidTotals[key].hrs += hrs;
+                obidTotals[key].cost += cost;
+                obidTotals[key].rows.push(this);
+
+                // assume hidden budget fields per row
+                obidTotals[key].budgetHrs = parseFloat($(this).find(".budgetHrs").val()) || 0;
+                obidTotals[key].budgetCost = parseFloat($(this).find(".budgetCost").val()) || 0;
+            });
+
+            // Compare & flag
+            for (let key in obidTotals) {
+                const totals = obidTotals[key];
+
+                const hrsMatch = Math.abs(totals.hrs - totals.budgetHrs) < 0.01;
+                const costMatch = Math.abs(totals.cost - totals.budgetCost) < 0.01;
+
+                totals.rows.forEach(row => {
+                    const hrsInput = $(row).find("input[name*='DelHours']");
+                    const costInput = $(row).find("input[name*='DelCost']");
+
+                    hrsInput.toggleClass("text-danger", !hrsMatch);
+                    costInput.toggleClass("text-danger", !costMatch);
+                });
+            }
+        }
+
+        function checkBudgetConsistency() {
+            let taskTotals = {};
+
+            // --- Sum deliverables per OBID ---
+            $("#deliverablesTable tbody tr").each(function () {
+                if ($(this).find("button[name='addNew']").length) return;
+
+                const obid = $(this).find("select[name*='OBID']").val();
+                if (!obid) return;
+
+                const hrs = parseFloat($(this).find(".delHrs").val()) || 0;
+                const cost = parseFloat($(this).find(".delCost").val()) || 0;
+
+                if (!taskTotals[obid]) {
+                    taskTotals[obid] = { hrs: 0, cost: 0, rows: [] };
+                }
+                taskTotals[obid].hrs += hrs;
+                taskTotals[obid].cost += cost;
+                taskTotals[obid].rows.push($(this));
+            });
+
+            // --- Compare to budget per OBID ---
+            for (let obid in taskTotals) {
+                const data = taskTotals[obid];
+
+                data.rows.forEach(row => {
+                    const budgetHrs = parseFloat(row.find(".budgetHrs").val()) || 0;
+                    const budgetCost = parseFloat(row.find(".budgetCost").val()) || 0;
+
+                    // Flag mismatch
+                    const hrsMismatch = data.hrs !== budgetHrs;
+                    const costMismatch = data.cost !== budgetCost;
+
+                    row.find(".delHrs, .budgetHrs").toggleClass("text-danger", hrsMismatch);
+                    row.find(".delCost, .budgetCost").toggleClass("text-danger", costMismatch);
+                });
+            }
+        }
+
+        function bindAutoCostCalc() {
+            $("#deliverablesTable").on("input", ".delHrs", function () {
+                const row = $(this).closest("tr");
+                const hrs = parseFloat($(this).val()) || 0;
+                const budgetHrs = parseFloat(row.find(".budgetHrs").val()) || 0;
+                const budgetCost = parseFloat(row.find(".budgetCost").val()) || 0;
+
+                const rate = budgetHrs === 0 ? 0 : budgetCost / budgetHrs;
+                const newCost = hrs * rate;
+
+                // update both display + hidden
+                row.find(".delCost").val(newCost.toFixed(2));
+                row.find(".delCostDisplay").val(newCost.toFixed(2));
+
+                recalcTotals(); // trigger consistency + totals check
+            });
+        }
+
+
+        function bindNewRowAutoCalc() {
+            $("#newDelHrs").on("input", function () {
+                const hrs = parseFloat($(this).val()) || 0;
+                const budgetHrs = parseFloat($("#newBudgetHrs").val()) || 0;
+                const budgetCost = parseFloat($("#newBudgetCost").val()) || 0;
+
+                const rate = budgetHrs === 0 ? 0 : budgetCost / budgetHrs;
+                const newCost = hrs * rate;
+
+                $("#newDelCost").val(newCost.toFixed(2));
+                $("#newDelCostDisplay").val(newCost.toFixed(2));
+
+                recalcTotals(); // keep consistency check live
+            });
+        }
+
 
         // --- Hook up events ---
         $(document).ready(function () {
+            bindAutoCostCalc();
+            bindNewRowAutoCalc();
             recalcTotals();
             $("#deliverablesTable tbody input").on("input change", recalcTotals);
-            $("#filterBox").on("keyup", function () {
-                const value = $(this).val().toLowerCase();
-                $("#deliverablesTable tbody tr").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            // real-time filter that includes select option text + hidden inputs
+            $("#filterBox").on("input", function () {
+                const value = $(this).val().toLowerCase().trim();
+
+                $("#deliverablesTable tbody tr").each(function () {
+                    // skip Add New row
+                    if ($(this).find("button[name='addNew']").length) return;
+
+                    let rowTextParts = [];
+
+                    // iterate each cell and pick the best searchable text:
+                    $(this).find("td").each(function () {
+                    const $cell = $(this);
+
+                    // 1) if there's a select, use selected option text
+                    const $select = $cell.find("select");
+                    if ($select.length) {
+                        rowTextParts.push($select.find("option:selected").text() || "");
+                        return; // next td
+                    }
+
+                    // 2) if there are inputs (including hidden), add their values
+                    const $inputs = $cell.find("input");
+                    if ($inputs.length) {
+                        $inputs.each(function () {
+                            rowTextParts.push($(this).val() || "");
+                        });
+                        return;
+                    }
+
+                    // 3) otherwise fall back to the cell text
+                    rowTextParts.push($cell.text() || "");
                 });
-                recalcTotals();
+
+                const rowText = rowTextParts.join(" ").toLowerCase();
+                $(this).toggle(rowText.indexOf(value) !== -1);
             });
+
+            recalcTotals();
+        });
         });
 
+        // Run budget check whenever hours or cost are edited
+        $(document).on("input", "input[name*='DelHours'], input[name*='DelCost']", function () {
+            checkBudgetMatch();
+        });
 
 
         });
