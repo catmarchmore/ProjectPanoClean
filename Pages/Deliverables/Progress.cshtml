@@ -19,29 +19,241 @@
 
 <div class="d-flex align-items-center mb-2">
     <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
-
     <select id="jobDropdown" class="selectpicker form-control" data-live-search="true"
             style="width:700px;" asp-for="JobId" asp-items="Model.JobSelectList">
         <option value="">-- Select job --</option>
     </select>
+
+    @if (Model.ProgressDateSelectList != null)
+    {
+        <label class="ms-4 me-2">Progress Date:</label>
+        <select id="progressDropdown" class="form-control" asp-for="ProgressDate" asp-items="Model.ProgressDateSelectList">
+            <option value="">-- Select date --</option>
+        </select>
+    }
 </div>
 <br />
 <br />
 
+@if (Model.Deliverables.Any())
+{
+    <form method="post">
+        <div class="mb-2">
+            <input type="text" id="filterBox" placeholder="Filter..." class="form-control" style="max-width: 300px;" />
+        </div>
+
+        <table class="table table-sm" id="deliverablesTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Direct</th>
+                    <th>Task</th>
+                    <th>Name</th>
+                    <th>Hours</th>
+                    <th>Cost</th>
+                    <th>Cumul<br />% Complete</th>
+                    <th>Earned Hrs</th>
+                    <th>Earned Cost</th>
+                    <th>DirPct</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Deliverables.Count; i++)
+                {
+                    var d = Model.Deliverables[i];
+                    <tr>
+                        <!-- Edit -->
+                        <td>
+                            <button type="submit" name="editId" value="@d.DeliverableID" class="btn btn-sm btn-secondary">Edit</button>
+                        </td>
+
+                        <td><input asp-for="Deliverables[@i].Direct" type="checkbox" /></td>
+                        <td>@d.myTask<input type="hidden" asp-for="Deliverables[@i].DeliverableID" /></td>
+                        <td><input asp-for="Deliverables[@i].DelName" class="form-control" /></td>
+                        <td><input asp-for="Deliverables[@i].DelHours" class="form-control text-end" /></td>
+                        <td>
+                            @d.DelCost.ToString("C2")
+                            <input type="hidden" asp-for="Deliverables[@i].DelCost" />
+                        </td>
+                        <td>
+                            <!-- Visible % Complete (0–100) -->
+                            <input type="number"
+                                   class="form-control text-end pctInput"
+                                   min="0"
+                                   max="100"
+                                   step="1"
+                                   value="@(d.DelPctCumul * 100)" />
+
+                            <!-- Hidden decimal value for posting -->
+                            <input type="hidden"
+                                   class="pctHidden"
+                                   asp-for="Deliverables[@i].DelPctCumul" />
+                        </td>
+
+                        <td>
+                            <!-- Visible earned hours, updates via JS -->
+                            @* <input type="text" class="form-control text-end earnedHrs" readonly value="@(d.DelHours* d.DelPctCumul).ToString(" F2")" /> *@
+                            <input type="text" class="form-control earnedHrs text-end" readonly /> <!-- Earned Hrs -->
+                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs" value="@(d.DelHours* d.DelPctCumul)" />
+                        </td>
+                        <td>
+                            <!-- Visible earned cost, updates via JS -->
+                            @* <input type="text" class="form-control text-end earnedCost" readonly value="@(d.DelCost* d.DelPctCumul).ToString(" F2")" /> *@
+                            <input type="text" class="form-control earnedCost text-end" readonly /> <!-- Earned Cost -->
+                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedCost" value="@(d.DelCost* d.DelPctCumul)" />
+                        </td>
+
+                        <!-- Delete -->
+                        <td>
+                            <button type="submit" name="deleteId" value="@d.DeliverableID" class="btn btn-sm btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                }
+
+                <!-- Blank "Add New" row -->
+                <tr>
+                    <td><span class="text-muted">New</span></td>
+                    <td><input type="checkbox" name="NewDeliverable.Direct" /></td>
+                    <td><input type="text" name="NewDeliverable.myTask" class="form-control" /></td>
+                    <td><input type="text" name="NewDeliverable.DelName" class="form-control" /></td>
+                    <td><input type="number" name="NewDeliverable.DelHours" class="form-control text-end" /></td>
+                    <td><input type="number" name="NewDeliverable.DelCost" class="form-control text-end" /></td>
+                    <td><input type="number" step="1" name="NewDeliverable.DelPctCumul" class="form-control text-end" /></td>
+                    <td colspan="3">
+                        <button type="submit" name="addNew" value="1" class="btn btn-sm btn-success">Add</button>
+                    </td>
+                </tr>
+            </tbody>
+
+            <tfoot class="fw-bold">
+                <tr>
+                    <td colspan="4" class="text-end">Totals:</td>
+                    <td id="totalHours" class="text-end">0</td>
+                    <td id="totalCost" class="text-end">0</td>
+                    <td id="totalCumulPct" class="text-end">0%</td>
+                    <td id="totalEarnedHrs" class="text-end">0</td>
+                    <td id="totalEarnedCost" class="text-end">0</td>
+                    <td id="dirPctFooter" class="text-end">0%</td>
+                </tr>
+            </tfoot>
+
+        </table>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+}
+
 @section Scripts {
     <script>
         $(function () {
-            // ensure selectpicker is initialized (after jquery + bootstrap-select load in _Layout)
+            // --- Dropdowns ---
             $('#jobDropdown').selectpicker();
+            $('#progressDropdown').selectpicker();
 
-            // when the user picks a job, navigate and pass jobId as querystring
-            $('#jobDropdown').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-                const selectedJobId = $(this).val();
-                if (selectedJobId) {
-                    // use normal redirect (causes a new GET, firing OnGetAsync)
-                    window.location.href = `/Deliverables/Progress?jobId=${selectedJobId}`;
+            $('#jobDropdown').on('changed.bs.select', function () {
+                const jobId = $(this).val();
+                if (jobId) {
+                    window.location.href = `/Deliverables/Progress?jobId=${jobId}`;
                 }
             });
+
+            $('#progressDropdown').on('changed.bs.select', function () {
+                const progressDate = $(this).val();
+                const jobId = $('#jobDropdown').val();
+                if (progressDate && jobId) {
+                    window.location.href = `/Deliverables/Progress?jobId=${jobId}&progressDate=${progressDate}`;
+                }
+            });
+
+            // --- Filter rows ---
+            $("#filterBox").on("keyup", function () {
+                const value = $(this).val().toLowerCase();
+
+                $("#deliverablesTable tbody tr").filter(function () {
+                    // optionally, search only Task + DelName
+                    const task = $(this).find("td:nth-child(3)").text().toLowerCase();
+                    const name = $(this).find("td:nth-child(4) input").val()?.toLowerCase() || "";
+                    $(this).toggle(task.indexOf(value) > -1 || name.indexOf(value) > -1);
+                });
+
+                recalcTotals();
+            });
+
+            // --- Totals and DirPct calculation ---
+        function recalcTotals() {
+            let totalHours = 0, totalCost = 0, totalEarnedHrs = 0, totalEarnedCost = 0;
+            let dirEarned = 0, dirCost = 0;
+
+            // --- First pass: calculate DirPct across all direct=1 rows (ignore filtering) ---
+            $("#deliverablesTable tbody tr").each(function () {
+                if ($(this).find("button[name='addNew']").length) return;
+
+                const isDirect = $(this).find("input[type='checkbox']").prop("checked");
+                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+                const pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
+                const pct = pctInput / 100;
+
+                if (isDirect) {
+                    dirCost += cost;
+                    dirEarned += cost * pct;
+                }
+            });
+
+            const dirPct = dirCost === 0 ? 0 : dirEarned / dirCost;
+            $("#dirPctFooter").text((dirPct * 100).toFixed(1) + "%");
+
+            // --- Second pass: calculate totals for visible rows & update earned values ---
+            $("#deliverablesTable tbody tr:visible").each(function () {
+                if ($(this).find("button[name='addNew']").length) return;
+
+                const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
+                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+                const isDirect = $(this).find("input[type='checkbox']").prop("checked");
+
+                // For direct rows, use user input; for non-direct, override with dirPct
+                let pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
+                const pct = isDirect ? pctInput / 100 : dirPct;
+
+                // Update visible % Complete field
+                $(this).find(".pctInput").val((pct * 100).toFixed(0));
+
+                const earnedHrs = hrs * pct;
+                const earnedCost = cost * pct;
+
+                $(this).find(".earnedHrs").val(earnedHrs.toFixed(2));
+                $(this).find(".earnedCost").val(earnedCost.toFixed(2));
+                $(this).find(".pctHidden").val(pct); // hidden field for posting
+
+                // Add to totals for visible rows
+                totalHours += hrs;
+                totalCost += cost;
+                totalEarnedHrs += earnedHrs;
+                totalEarnedCost += earnedCost;
+            });
+
+            // --- Update footer totals ---
+            $("#totalHours").text(totalHours.toFixed(2));
+            $("#totalCost").text(totalCost.toFixed(2));
+            $("#totalEarnedHrs").text(totalEarnedHrs.toFixed(2));
+            $("#totalEarnedCost").text(totalEarnedCost.toFixed(2));
+            $("#totalCumulPct").text(totalCost === 0 ? "0%" : ((totalEarnedCost / totalCost) * 100).toFixed(1) + "%");
+        }
+
+        // --- Hook up events ---
+        $(document).ready(function () {
+            recalcTotals();
+            $("#deliverablesTable tbody input").on("input change", recalcTotals);
+            $("#filterBox").on("keyup", function () {
+                const value = $(this).val().toLowerCase();
+                $("#deliverablesTable tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+                recalcTotals();
+            });
+        });
+
+
+
         });
     </script>
 }

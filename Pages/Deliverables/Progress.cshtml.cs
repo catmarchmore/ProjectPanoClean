@@ -22,6 +22,7 @@ namespace ProjectPano.Pages.Deliverables
         private readonly DAL dal;
         public List<vwJob> OpenProj { get; set; } = new List<vwJob>();
         public SelectList JobSelectList { get; set; }
+        public SelectList ProgressDateSelectList { get; set; }
         public DateTime CurrWeekEnding { get; set; } = DateTime.Today;
         public ProgressModel(IConfiguration configuration)
         {
@@ -32,7 +33,16 @@ namespace ProjectPano.Pages.Deliverables
         [BindProperty(SupportsGet = true)]
         public int? JobId { get; set; }
 
-        public void OnGet(int? jobId)
+        [BindProperty(SupportsGet = true)]
+        public DateTime? ProgressDate { get; set; }
+
+        [BindProperty]
+        public List<vwDeliverableHist> Deliverables { get; set; } = new();
+
+        [BindProperty]
+        public tbDeliverableHist? NewDeliverable { get; set; }
+
+        public void OnGet(int? JobId)
         {
             var today = DateTime.Today;
             CurrWeekEnding = GetWE.GetWeekEnding(today);
@@ -43,13 +53,48 @@ namespace ProjectPano.Pages.Deliverables
                 .Where(j => j.BillingStatus == "In Process" && j.CorpID == 1)
                 .OrderBy(j => j.ClientJob)
                 .ToList();
-
-            // If the query parameter was supplied use it (also works when model-binding sets JobId)
-            if (jobId.HasValue)
-                JobId = jobId.Value;
-
-            // Build the SelectList — passing JobId (nullable) will pre-select if present
             JobSelectList = new SelectList(filteredJobs, "JobID", "ClientJob", JobId);
+
+            if (JobId.HasValue)
+            {
+                var dates = dal.GetProgressDatesByJob(JobId.Value, configuration);
+                ProgressDateSelectList = new SelectList(dates, ProgressDate);
+
+                if (ProgressDate.HasValue)
+                {
+                    Deliverables = dal.GetDeliverablesByJobAndDate(JobId.Value, ProgressDate.Value, configuration);
+                }
+            }
         }
+
+        public IActionResult OnPost(int? jobId, int? deleteId, int? editId, int? addNew)
+        {
+            if (deleteId.HasValue)
+            {
+                dal.DeleteDeliverableHist(deleteId.Value, configuration);
+                return RedirectToPage(new { JobId, ProgressDate });
+            }
+
+            if (addNew.HasValue && NewDeliverable != null)
+            {
+                // fill in required context fields
+                NewDeliverable.JobID = jobId.Value;
+                NewDeliverable.ProgressDate = ProgressDate;
+
+                dal.InsertDeliverableHist(NewDeliverable, configuration);
+                return RedirectToPage(new { JobId, ProgressDate });
+            }
+
+            if (Deliverables != null)
+            {
+                foreach (var d in Deliverables)
+                {
+                    dal.UpdateDeliverableHist(d, configuration);
+                }
+            }
+
+            return RedirectToPage(new { JobId, ProgressDate });
+        }
+
     }
 }

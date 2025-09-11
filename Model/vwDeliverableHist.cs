@@ -26,7 +26,8 @@
         public DateTime? PlanFinishDate { get; set; }
         
         public DateTime? PlanStartDate { get; set; }
-
+        public string? DelNum { get; set; }
+        public string? DelRev { get; set; }
 
     }
 }

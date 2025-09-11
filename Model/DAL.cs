@@ -2220,23 +2220,49 @@ namespace ProjectPano.Model
             return deliverable;
         }
 
-        public vwDeliverableHist GetDeliverableByJobId(int jobId, DateTime myWE,IConfiguration configuration)
+        public List<DateTime> GetProgressDatesByJob(int jobId, IConfiguration configuration)
         {
-            vwDeliverableHist deliverable = null;
+            var dates = new List<DateTime>();
 
             using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
             {
-                string query = "SELECT * FROM vwDeliverableHist WHERE JobID = @JobID and ProgressDate=@myWE";
+                string query = @"SELECT DISTINCT ProgressDate 
+                         FROM vwDeliverableHist
+                         WHERE JobID = @JobID
+                         ORDER BY ProgressDate DESC";
+
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@JobID", jobId);
-                cmd.Parameters.AddWithValue("@myWE", myWE);
+
+                con.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    dates.Add(reader.GetDateTime(0));
+                }
+                reader.Close();
+            }
+
+            return dates;
+        }
+
+        public List<vwDeliverableHist> GetDeliverablesByJobAndDate(int jobId, DateTime progressDate, IConfiguration configuration)
+        {
+            var list = new List<vwDeliverableHist>();
+
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
+            {
+                string query = "SELECT * FROM vwDeliverableHist WHERE JobID = @JobID AND ProgressDate = @ProgressDate";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@JobID", jobId);
+                cmd.Parameters.AddWithValue("@ProgressDate", progressDate);
 
                 con.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                if (reader.Read())
+                while (reader.Read())
                 {
-                    deliverable = new vwDeliverableHist
+                    var deliverable = new vwDeliverableHist
                     {
                         DeliverableID = reader.GetInt32(reader.GetOrdinal("DeliverableID")),
                         JobID = reader.GetInt32(reader.GetOrdinal("JobID")),
@@ -2254,19 +2280,21 @@ namespace ProjectPano.Model
                         DelEarnedHrs = reader.IsDBNull(reader.GetOrdinal("DelEarnedHrs")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelEarnedHrs")),
                         DelEarnedCost = reader.IsDBNull(reader.GetOrdinal("DelEarnedCost")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DelEarnedCost")),
                         ProgressDate = reader.IsDBNull(reader.GetOrdinal("ProgressDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("ProgressDate")),
-                        Direct=reader.GetBoolean(reader.GetOrdinal("Direct")),
+                        Direct = reader.GetBoolean(reader.GetOrdinal("Direct")),
                         DirPct = reader.IsDBNull(reader.GetOrdinal("DirPct")) ? 0 : reader.GetDecimal(reader.GetOrdinal("DirPct")),
                         PlanFinishDate = reader.IsDBNull(reader.GetOrdinal("PlanFinishDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanFinishDate")),
                         PlanStartDate = reader.IsDBNull(reader.GetOrdinal("PlanStartDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanStartDate")),
-
                     };
+
+                    list.Add(deliverable);
                 }
 
                 reader.Close();
             }
 
-            return deliverable;
+            return list;  
         }
+
 
         public int UpdateDeliverable(tbDeliverable d, IConfiguration configuration)
         {
@@ -2277,14 +2305,14 @@ namespace ProjectPano.Model
                 string sql = @"
             UPDATE tbDeliverableHist
             SET 
-                DelNum = @DelNum,
+                
                 DelName = @DelName,
                 DelHours = @DelHours,
                 DelCost = @DelCost,
                 DelComment = @DelComment,
                 PlanFinishDate = @PlanFinishDate,
                 PlanStartDate = @PlanStartDate,
-                DelRev = @DelRev,
+                
                 DelGp1 = @DelGp1,
                 DelGp2 = @DelGp2,
                 DelGp3 = @DelGp3,
@@ -2294,14 +2322,13 @@ namespace ProjectPano.Model
 
                 using (SqlCommand cmd = new SqlCommand(sql, con))
                 {
-                    cmd.Parameters.AddWithValue("@DelNum", (object?)d.DelNum ?? DBNull.Value);
+                    
                     cmd.Parameters.AddWithValue("@DelName", (object?)d.DelName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelHours", d.DelHours);
                     cmd.Parameters.AddWithValue("@DelCost", d.DelCost);
                     cmd.Parameters.AddWithValue("@DelComment", (object?)d.DelComment ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@PlanFinishDate", d.PlanFinishDate);
-                    cmd.Parameters.AddWithValue("@PlanStartDate", d.PlanStartDate);
-                    cmd.Parameters.AddWithValue("@DelRev", (object?)d.DelRev ?? DBNull.Value);
+                    
+                    
                     cmd.Parameters.AddWithValue("@DelGp1", (object?)d.DelGp1 ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelGp2", (object?)d.DelGp2 ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelGp3", (object?)d.DelGp3 ?? DBNull.Value);
@@ -2315,6 +2342,124 @@ namespace ProjectPano.Model
 
             return rowsAffected;
         }
+
+        public int UpdateDeliverableHist(vwDeliverableHist d, IConfiguration configuration)
+        {
+            int rowsAffected = 0;
+
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
+            {
+                string sql = @"
+        UPDATE tbDeliverableHist
+        SET 
+            
+            DelName = @DelName,
+            DelHours = @DelHours,
+            DelCost = @DelCost,
+            DelComment = @DelComment,
+DelEarnedHrs=@DelEarnedHrs,
+DelEarnedCost=@DelEarnedCost,
+DelPctCumul=@DelPctCumul,
+DirPct=@DirPct,
+Direct=@Direct,
+            
+            
+            DelGp1 = @DelGp1,
+            DelGp2 = @DelGp2,
+            DelGp3 = @DelGp3,
+            DelGp4 = @DelGp4,
+            Modified = GETDATE()
+        WHERE DeliverableID = @DeliverableHistID";  
+
+                using (SqlCommand cmd = new SqlCommand(sql, con))
+                {
+                    //cmd.Parameters.AddWithValue("@DelNum", (object?)d.DelNum ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelName", (object?)d.DelName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelHours", d.DelHours);
+                    cmd.Parameters.AddWithValue("@DelCost", d.DelCost);
+                    cmd.Parameters.AddWithValue("@DelComment", (object?)d.DelComment ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelEarnedHrs", d.DelEarnedHrs);
+                    cmd.Parameters.AddWithValue("@DelEarnedCost", d.DelEarnedCost);
+                    cmd.Parameters.AddWithValue("@DelPctCumul", d.DelPctCumul);
+                    cmd.Parameters.AddWithValue("@DirPct", d.DirPct);
+                    cmd.Parameters.AddWithValue("@Direct", d.Direct);
+                    //cmd.Parameters.AddWithValue("@PlanFinishDate", d.PlanFinishDate);
+                    //cmd.Parameters.AddWithValue("@PlanStartDate", d.PlanStartDate);
+                    //cmd.Parameters.AddWithValue("@DelRev", (object?)d.DelRev ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp1", (object?)d.DelGp1 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp2", (object?)d.DelGp2 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp3", (object?)d.DelGp3 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp4", (object?)d.DelGp4 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DeliverableHistID", d.DeliverableID);
+
+                    con.Open();
+                    rowsAffected = cmd.ExecuteNonQuery();
+                }
+            }
+
+            return rowsAffected;
+        }
+
+        public int DeleteDeliverableHist(int deliverableId, IConfiguration configuration)
+        {
+            int rowsAffected = 0;
+
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
+            {
+                string sql = "DELETE FROM tbDeliverableHist WHERE DeliverableID = @DeliverableID";
+
+                using (SqlCommand cmd = new SqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@DeliverableID", deliverableId);
+
+                    con.Open();
+                    rowsAffected = cmd.ExecuteNonQuery();
+                }
+            }
+
+            return rowsAffected;
+        }
+
+        public int InsertDeliverableHist(tbDeliverableHist d, IConfiguration configuration)
+        {
+            int newId = 0;
+
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS")))
+            {
+                string sql = @"
+            INSERT INTO tbDeliverableHist
+            (JobID, ProgressDate,  DelName, DelHours, DelCost, DelComment, 
+            DelGp1, DelGp2, DelGp3, DelGp4, Direct, DelPctCumul, Modified)
+            OUTPUT INSERTED.DeliverableID
+            VALUES
+            (@JobId, @ProgressDate,  @DelName, @DelHours, @DelCost, @DelComment,
+             @DelGp1, @DelGp2, @DelGp3, @DelGp4, @Direct, @DelPctCumul, GETDATE())";
+
+                using (SqlCommand cmd = new SqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@JobId", d.JobID);
+                    cmd.Parameters.AddWithValue("@ProgressDate", d.ProgressDate);
+                    cmd.Parameters.AddWithValue("@DelNum", (object?)d.DelNum ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelName", (object?)d.DelName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelHours", d.DelHours);
+                    cmd.Parameters.AddWithValue("@DelCost", d.DelCost);
+                    cmd.Parameters.AddWithValue("@DelEarnedHrs", d.DelEarnedHrs);
+                    cmd.Parameters.AddWithValue("@DelEarnedCost", d.DelEarnedCost);
+                    cmd.Parameters.AddWithValue("@DelComment", (object?)d.DelComment ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp1", (object?)d.DelGp1 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp2", (object?)d.DelGp2 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp3", (object?)d.DelGp3 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DelGp4", (object?)d.DelGp4 ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Direct", d.Direct);
+                    cmd.Parameters.AddWithValue("@DelPctCumul", d.DelPctCumul);
+
+                    con.Open();
+                    newId = (int)cmd.ExecuteScalar();
+                }
+            }
+
+            return newId;
+        }   
 
         public int UpdateThisDiscETCOneline(DiscETCDto d, IConfiguration configuration)
         {
