@@ -46,10 +46,15 @@ namespace ProjectPano.Pages.Deliverables
 
         public List<vwBudgetActuals_REVISED> vwBudgetActuals { get; set; } = new List<vwBudgetActuals_REVISED>();
 
-        public void OnGet(int? JobId)
+        public void OnGet(int? JobId,DateTime? progressDate)
         {
             var today = DateTime.Today;
             CurrWeekEnding = GetWE.GetWeekEnding(today);
+            progressDate = CurrWeekEnding;
+
+            if (NewDeliverable == null)
+                NewDeliverable = new tbDeliverableHist();
+            NewDeliverable.ProgressDate = progressDate.Value;
 
             // Always populate the base list
             OpenProj = dal.GetAllOpenProj(configuration);
@@ -82,6 +87,7 @@ namespace ProjectPano.Pages.Deliverables
 
                 if (ProgressDate.HasValue)
                 {
+                    NewDeliverable.ProgressDate = progressDate.Value;
                     Deliverables = dal.GetDeliverablesByJobAndDate(
                         JobId.Value, ProgressDate.Value, configuration
                     );
@@ -102,9 +108,13 @@ namespace ProjectPano.Pages.Deliverables
             {
                 // fill in required context fields
                 NewDeliverable.JobID = jobId.Value;
-                NewDeliverable.ProgressDate = ProgressDate;
+                //NewDeliverable.ProgressDate = ProgressDate;
 
-                dal.InsertDeliverableHist(NewDeliverable,ProgressDate.Value, configuration);
+                // Default Direct to true if not explicitly set
+                if (NewDeliverable.Direct == null)
+                    NewDeliverable.Direct = true;
+
+                dal.InsertDeliverableHist(NewDeliverable, configuration);
                 return RedirectToPage(new { JobId, ProgressDate });
             }
 

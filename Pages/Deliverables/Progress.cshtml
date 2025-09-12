@@ -35,6 +35,10 @@
 <br />
 <br />
 
+<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#deliverableModal">
+    Add New Activity/Deliverable
+</button>
+
 @if (Model.Deliverables.Any())
 {
     <form method="post">
@@ -142,7 +146,6 @@
                                    readonly />
                         </td>
 
-
                         <td>DIRPCT</td>
 
                         <!-- Delete Button -->
@@ -153,54 +156,6 @@
                         <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs" value="@(d.DelHours* d.DelPctCumul)" />
                     </tr>
                 }
-
-                <!-- Blank "Add New" row -->
-                <tr>
-                    <td><span class="text-muted">New</span></td>
-                    <td><input type="checkbox" name="NewDeliverable.Direct" /></td>
-
-                    <td>
-                        <select class="form-control" name="NewDeliverable.OBID">
-                            <option value="">-- Select Task --</option>
-                            @foreach (var task in Model.vwBudgetActuals)
-                            {
-                                <option value="@task.OBID">@task.MYTASK</option>
-                            }
-                        </select>
-                    </td>
-
-                    <td><input type="text" name="NewDeliverable.DelName" class="form-control" /></td>
-                    <td><input type="number" name="NewDeliverable.DelHours" class="form-control text-end" /></td>
-
-                    <td>
-                        <!-- Hidden input: bound to model -->
-                        <input type="hidden" name="NewDeliverable.DelCost" id="newDelCost" />
-
-                        <!-- Display only -->
-                        <input type="text" id="newDelCostDisplay" class="form-control text-end" readonly />
-                    </td>
-
-                    <td><input type="number" step="1" name="NewDeliverable.DelPctCumul" class="form-control text-end" /></td>
-                    <td><input type="text" name="NewDeliverable.DelComment" class="form-control" /></td>
-                    <td colspan="3">
-                        <button type="submit" name="addNew" value="1" class="btn btn-sm btn-success">Add</button>
-                    </td>
-
-                    <td><input type="hidden" name="NewDeliverable.DelEarnedCost" value="0" /></td>
-                    <td><input type="hidden" name="NewDeliverable.DelEarnedHrs" value="0" /></td>
-                    @* <input type="hidden" asp-for="NewDeliverable.ProgressDate" /> *@
-
-
-
-
-
-                    <td>
-                        <!-- Support budget validation -->
-                        <input id="newBudgetHrs" class="budgetHrs" type="hidden" />
-                        <input id="newBudgetCost" class="budgetCost" type="hidden" />
-                    </td>
-                </tr>
-
             </tbody>
 
             <tfoot class="fw-bold">
@@ -223,6 +178,103 @@
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
 }
+
+<!-- Modal popup for new item -->
+<div id="deliverableModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deliverableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content p-4">
+            <div class="modal-header">
+                <h4 class="modal-title" id="deliverableModalLabel">Add New Deliverable</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <form method="post" asp-page-handler="AddNew">
+                <input type="hidden" asp-for="NewDeliverable.JobID" value="@Model.JobId" />
+                <input type="hidden" asp-for="NewDeliverable.ProgressDate" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" />
+
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Task/Name -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Task / Name</legend>
+
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="direct" name="NewDeliverable.Direct" value="true" checked />
+                                    <label class="form-check-label" for="direct">Direct</label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="obid">Task</label>
+                                    <select class="form-control" id="obid" name="NewDeliverable.OBID" required>
+                                        <option value="">-- Select Task --</option>
+                                        @foreach (var task in Model.vwBudgetActuals)
+                                        {
+                                            <option value="@task.OBID">@task.MYTASK</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="delName">Deliverable Name</label>
+                                    <input type="text" class="form-control" id="delName" name="NewDeliverable.DelName" />
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- Budget -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Budget</legend>
+
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="direct" name="NewDeliverable.Direct" value="true" checked />
+                                    <label class="form-check-label" for="direct">Direct</label>
+                                    <input type="hidden" name="NewDeliverable.Direct" value="false" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="delHours">Hours</label>
+                                    <input type="number" class="form-control text-right" id="delHours" name="NewDeliverable.DelHours" step="0.01" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="delCost">Cost</label>
+                                    <input type="number" class="form-control text-right" id="delCost" name="NewDeliverable.DelCost" step="0.01" readonly />
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="col-md-4">
+                            <fieldset class="styled-fieldset">
+                                <legend class="styled-legend-required">Progress</legend>
+
+                                <div class="form-group">
+                                    <label for="delPctCumul">% Complete</label>
+                                    <input type="number" class="form-control text-right" id="delPctCumul" name="NewDeliverable.DelPctCumul" step="0.01" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="delComment">Comment</label>
+                                    <textarea class="form-control" id="delComment" name="NewDeliverable.DelComment" rows="2"></textarea>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 @section Scripts {
     <script>
@@ -425,6 +477,38 @@
                 recalcTotals(); // keep consistency check live
             });
         }
+
+        //stuff for modal
+                // preload budget info into a JS object
+        var budgetData = {
+            @foreach (var task in Model.vwBudgetActuals)
+            {
+                    <text>
+                    "@task.OBID": { currhrs: @task.CURRHRS, currcost: @task.CURRCOST },
+                    </text>
+            }
+        };
+
+        function recalcDelCost() {
+            var obid = document.getElementById("obid").value;
+            var hrs = parseFloat(document.getElementById("delHours").value) || 0;
+
+            if (obid && budgetData[obid]) {
+                var currhrs = budgetData[obid].currhrs || 0;
+                var currcost = budgetData[obid].currcost || 0;
+
+                if (currhrs > 0) {
+                    var cost = (hrs / currhrs) * currcost;
+                    document.getElementById("delCost").value = cost.toFixed(2);
+                } else {
+                    document.getElementById("delCost").value = "0.00";
+                }
+            }
+        }
+
+        // recalc cost when OBID or hours change
+        document.getElementById("obid").addEventListener("change", recalcDelCost);
+        document.getElementById("delHours").addEventListener("input", recalcDelCost);
 
 
         // --- Hook up events ---

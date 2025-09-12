@@ -2434,7 +2434,7 @@ Direct=@Direct,
             return rowsAffected;
         }
 
-        public int InsertDeliverableHist(tbDeliverableHist d,  DateTime ProgressDate,IConfiguration configuration)
+        public int InsertDeliverableHist(tbDeliverableHist d,  IConfiguration configuration)
         {
             int newId = 0;
 
@@ -2443,18 +2443,18 @@ Direct=@Direct,
                 string sql = @"
             INSERT INTO tbDeliverableHist
             (JobID, OBID,ProgressDate,  DelName, DelHours, DelCost, DelComment, DelEarnedHrs,DelEarnedCost,
-            Direct, DelPctCumul, Modified)
+            DirPct,Direct, DelPctCumul, Modified, Created)
             OUTPUT INSERTED.DeliverableID
             VALUES
             (@JobId,@OBID, @ProgressDate,  @DelName, @DelHours, @DelCost, @DelComment,@DelEarnedHrs,@DelEarnedCost,
-             @Direct, @DelPctCumul,GETDATE())";
+             @DirPct,@Direct, @DelPctCumul,GETDATE(),GETDATE())";
 
                 using (SqlCommand cmd = new SqlCommand(sql, con))
                 {
                     cmd.Parameters.AddWithValue("@JobId", d.JobID);
                     cmd.Parameters.AddWithValue("@OBID", d.OBID);
                     //cmd.Parameters.AddWithValue("@ProgressDate", d.ProgressDate);
-                    cmd.Parameters.AddWithValue("@ProgressDate",ProgressDate);
+                    cmd.Parameters.AddWithValue("@ProgressDate", (object?)d.ProgressDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelName", (object?)d.DelName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DelHours", d.DelHours);
                     cmd.Parameters.AddWithValue("@DelCost", d.DelCost);
@@ -2463,7 +2463,7 @@ Direct=@Direct,
                     cmd.Parameters.AddWithValue("@DelEarnedCost", d.DelEarnedCost);
 
                     cmd.Parameters.AddWithValue("@Direct", d.Direct);
-                    //cmd.Parameters.AddWithValue("@DirPct", d.DirPct);
+                    cmd.Parameters.AddWithValue("@DirPct", d.DirPct);
                     cmd.Parameters.AddWithValue("@DelPctCumul", d.DelPctCumul);
 
                     con.Open();
