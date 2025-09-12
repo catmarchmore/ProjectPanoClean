@@ -7,7 +7,7 @@
 
         public string? DelNum { get; set; }
         public string? DelName { get; set; }
-        public decimal DelHours { get; set; }
+        public decimal DelHours { get; set; } 
         public decimal DelCost { get; set; }
         public decimal DelPctCumul { get; set; }
 

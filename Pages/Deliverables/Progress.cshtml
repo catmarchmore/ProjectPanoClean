@@ -18,26 +18,42 @@
 <h5 class="custom-h1">Assign Progress</h5>
 
 <div class="d-flex align-items-center mb-2">
-    <label for="jobDropdown" style="margin-right: 25px;">Pick Job:</label>
+    <label for="jobDropdown" style="margin-right: 15px;">Pick Job:</label>
     <select id="jobDropdown" class="selectpicker form-control" data-live-search="true"
-            style="width:700px;" asp-for="JobId" asp-items="Model.JobSelectList">
+            style="width:250px;" asp-for="JobId" asp-items="Model.JobSelectList">
         <option value="">-- Select job --</option>
     </select>
 
     @if (Model.ProgressDateSelectList != null)
     {
-        <label class="ms-4 me-2">Progress Date:</label>
-        <select id="progressDropdown" class="form-control" asp-for="ProgressDate" asp-items="Model.ProgressDateSelectList">
+        <label class="ms-3 me-2">Progress Date:</label>
+        <select id="progressDropdown" class="form-control" style="width:150px;" asp-for="ProgressDate" asp-items="Model.ProgressDateSelectList">
             <option value="">-- Select date --</option>
         </select>
+
+        <!-- Copy to new WE inline form -->
+        <form method="post" asp-page-handler="CopyProgress" class="d-flex align-items-center ms-3">
+           @*  <input type="hidden" name="SelectedDateFrom" value="@Model.ProgressDate?.ToString("o")" /> *@
+            <input type="hidden" name="SelectedDateFrom" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" />
+
+
+            <label class="me-2 mb-0">Copy to:</label>
+            <input type="date" name="SelectedDateTo" class="form-control form-control-sm me-2" required />
+
+            <button type="submit" class="btn btn-sm btn-info">Copy This RecordSet to New WE</button>
+        </form>
     }
 </div>
-<br />
+
+
 <br />
 
 <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#deliverableModal">
     Add New Activity/Deliverable
 </button>
+
+<br />
+<br />
 
 @if (Model.Deliverables.Any())
 {
@@ -49,7 +65,6 @@
         <table class="table table-sm" id="deliverablesTable">
             <thead>
                 <tr>
-                    <th></th>
                     <th>Direct</th>
                     <th>Task</th>
                     <th>Name</th>
@@ -69,10 +84,10 @@
                 {
                     var d = Model.Deliverables[i];
                     <tr>
-                        <!-- Edit -->
+@*                         <!-- Edit -->
                         <td>
                             <button type="submit" name="editId" value="@d.DeliverableID" class="btn btn-sm btn-secondary">Edit</button>
-                        </td>
+                        </td> *@
 
                         <td><input asp-for="Deliverables[@i].Direct" type="checkbox" /></td>
 
@@ -105,9 +120,12 @@
                         </td>
 
                         <td>
-                            <input type="hidden" asp-for="Deliverables[@i].DelCost"
+@*                             <input type="hidden" asp-for="Deliverables[@i].DelCost"
                                    class="delCost" />
-                            <input type="text" class="form-control text-end delCostDisplay" readonly />
+                            <input type="text" class="form-control text-end delCostDisplay" readonly /> *@
+                            <input asp-for="Deliverables[@i].DelCost"
+                                   class="form-control text-end delCost"
+                                   readonly />
                         </td>
 
                         <td>
@@ -160,7 +178,7 @@
 
             <tfoot class="fw-bold">
                 <tr>
-                    <td colspan="4" class="text-end">Totals:</td>
+                    <td colspan="3" class="text-end">Totals:</td>
                     <td id="totalHours" class="text-end">0</td>
                     <td id="totalCost" class="text-end">0</td>
                     <td id="totalCumulPct" class="text-end">0%</td>
@@ -191,8 +209,10 @@
             </div>
 
             <form method="post" asp-page-handler="AddNew">
-                <input type="hidden" asp-for="NewDeliverable.JobID" value="@Model.JobId" />
-                <input type="hidden" asp-for="NewDeliverable.ProgressDate" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="JobId" value="@Model.JobId" />
+
+                <input type="hidden" name="NewDeliverable.JobID" value="@Model.JobId" />
+                <input type="hidden" name="NewDeliverable.ProgressDate" value="@Model.ProgressDate?.ToString("o")" />
 
                 <div class="modal-body">
                     <div class="row">
@@ -200,11 +220,6 @@
                         <div class="col-md-4">
                             <fieldset class="styled-fieldset">
                                 <legend class="styled-legend-required">Task / Name</legend>
-
-                                <div class="form-group form-check">
-                                    <input type="checkbox" class="form-check-input" id="direct" name="NewDeliverable.Direct" value="true" checked />
-                                    <label class="form-check-label" for="direct">Direct</label>
-                                </div>
 
                                 <div class="form-group">
                                     <label for="obid">Task</label>
@@ -229,20 +244,34 @@
                             <fieldset class="styled-fieldset">
                                 <legend class="styled-legend-required">Budget</legend>
 
-                                <div class="form-check">
+@*                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="direct" name="NewDeliverable.Direct" value="true" checked />
                                     <label class="form-check-label" for="direct">Direct</label>
                                     <input type="hidden" name="NewDeliverable.Direct" value="false" />
+                                </div> *@
+
+                                <div class="form-group form-check">
+                                   @*  <input type="hidden" name="NewDeliverable.Direct" value="false" /> *@
+                                    <input type="checkbox" class="form-check-input" id="direct" name="NewDeliverable.Direct" value="true" checked />
+                                    <label class="form-check-label" for="direct">Direct</label>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="delHours">Hours</label>
-                                    <input type="number" class="form-control text-right" id="delHours" name="NewDeliverable.DelHours" step="0.01" />
+                                    <input type="number" class="form-control text-right" id="delHours" name="NewDeliverable.DelHours" step="0.01" value="0" />
                                 </div>
 
                                 <div class="form-group">
                                     <label for="delCost">Cost</label>
-                                    <input type="number" class="form-control text-right" id="delCost" name="NewDeliverable.DelCost" step="0.01" readonly />
+                                    @* <input type="number" class="form-control text-right" id="delCost" name="NewDeliverable.DelCost" step="0.01" readonly /> *@
+                                    <!-- Visible, user can't edit -->
+                                    <input type="number" class="form-control text-right"
+                                           id="delCostDisplay"
+                                           step="0.01"
+                                           readonly />
+
+                                    <!-- Hidden, posts actual value -->
+                                    <input type="hidden" id="delCost" name="NewDeliverable.DelCost" />
                                 </div>
                             </fieldset>
                         </div>
@@ -254,7 +283,7 @@
 
                                 <div class="form-group">
                                     <label for="delPctCumul">% Complete</label>
-                                    <input type="number" class="form-control text-right" id="delPctCumul" name="NewDeliverable.DelPctCumul" step="0.01" />
+                                    <input type="number" class="form-control text-right" id="delPctCumul" name="NewDeliverable.DelPctCumul" step="0.01" value="0" />
                                 </div>
 
                                 <div class="form-group">
@@ -278,7 +307,8 @@
 
 @section Scripts {
     <script>
-        $(function () {
+        $(document).ready(function () {
+
             // --- Dropdowns ---
             $('#jobDropdown').selectpicker();
             $('#progressDropdown').selectpicker();
@@ -298,273 +328,206 @@
                 }
             });
 
-            // --- Totals and DirPct calculation ---
+            // --- Budget data from server ---
+            var budgetData = @Html.Raw(Json.Serialize(
+                            Model.vwBudgetActuals.ToDictionary(
+                                    t => t.OBID,
+                                    t => new { currhrs = t.CURRHRS, currcost = t.CURRCOST }
+                            )
+                    ));
+
+        // --- Recalculate totals & earned cost ---
         function recalcTotals() {
             let totalHours = 0, totalCost = 0, totalEarnedHrs = 0, totalEarnedCost = 0;
             let dirEarned = 0, dirCost = 0;
 
-            // --- First pass: calculate DirPct across all direct=1 rows (ignore filtering) ---
-            $("#deliverablesTable tbody tr").each(function () {
-                if ($(this).find("button[name='addNew']").length) return;
-
-                const isDirect = $(this).find("input[type='checkbox']").prop("checked");
-                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
-                const pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
-                const pct = pctInput / 100;
-
-                if (isDirect) {
-                    dirCost += cost;
-                    dirEarned += cost * pct;
-                }
-            });
-
-            const dirPct = dirCost === 0 ? 0 : dirEarned / dirCost;
-            $("#dirPctFooter").text((dirPct * 100).toFixed(1) + "%");
-            $("#dirPctInput").val(dirPct);
-
-            // --- Second pass: calculate totals for visible rows & update earned values ---
-            $("#deliverablesTable tbody tr:visible").each(function () {
-                if ($(this).find("button[name='addNew']").length) return;
-
-                const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
-                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
-                const isDirect = $(this).find("input[type='checkbox']").prop("checked");
-
-                // For direct rows, use user input; for non-direct, override with dirPct
-                let pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
-                const pct = isDirect ? pctInput / 100 : dirPct;
-
-                // Update visible % Complete field
-                $(this).find(".pctInput").val((pct * 100).toFixed(0));
-
-                const earnedHrs = hrs * pct;
-                const earnedCost = cost * pct;
-
-                $(this).find(".earnedHrs").val(earnedHrs.toFixed(2));
-                $(this).find(".earnedCost").val(earnedCost.toFixed(2));
-                $(this).find(".pctHidden").val(pct); // hidden field for posting
-
-                // Add to totals for visible rows
-                totalHours += hrs;
-                totalCost += cost;
-                totalEarnedHrs += earnedHrs;
-                totalEarnedCost += earnedCost;
-            });
-
-            // --- Update footer totals ---
-            $("#totalHours").text(totalHours.toFixed(2));
-            $("#totalCost").text(totalCost.toFixed(2));
-            $("#totalEarnedHrs").text(totalEarnedHrs.toFixed(2));
-            $("#totalEarnedCost").text(totalEarnedCost.toFixed(2));
-            $("#totalCumulPct").text(totalCost === 0 ? "0%" : ((totalEarnedCost / totalCost) * 100).toFixed(1) + "%");
-
-            checkBudgetMatch();
-            checkBudgetConsistency();
-        }
-
-        function checkBudgetMatch() {
-            let obidTotals = {};
-
-            // Gather sums by OBID/MyTask
-            $("#deliverablesTable tbody tr").each(function () {
-                if ($(this).find("button[name='addNew']").length) return;
-
-                const obid = $(this).find("input[name*='OBID']").val();
-                const myTask = $(this).find("input[name*='MYTASK']").val();
-                const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
-                const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
-
-                const key = obid + "|" + myTask;
-                if (!obidTotals[key]) {
-                    obidTotals[key] = { hrs: 0, cost: 0, budgetHrs: 0, budgetCost: 0, rows: [] };
-                }
-                obidTotals[key].hrs += hrs;
-                obidTotals[key].cost += cost;
-                obidTotals[key].rows.push(this);
-
-                // assume hidden budget fields per row
-                obidTotals[key].budgetHrs = parseFloat($(this).find(".budgetHrs").val()) || 0;
-                obidTotals[key].budgetCost = parseFloat($(this).find(".budgetCost").val()) || 0;
-            });
-
-            // Compare & flag
-            for (let key in obidTotals) {
-                const totals = obidTotals[key];
-
-                const hrsMatch = Math.abs(totals.hrs - totals.budgetHrs) < 0.01;
-                const costMatch = Math.abs(totals.cost - totals.budgetCost) < 0.01;
-
-                totals.rows.forEach(row => {
-                    const hrsInput = $(row).find("input[name*='DelHours']");
-                    const costInput = $(row).find("input[name*='DelCost']");
-
-                    hrsInput.toggleClass("text-danger", !hrsMatch);
-                    costInput.toggleClass("text-danger", !costMatch);
+                // First pass: calculate DirPct for direct rows
+                $("#deliverablesTable tbody tr").each(function () {
+                    if ($(this).find("button[name='addNew']").length) return;
+                    const isDirect = $(this).find("input[type='checkbox']").prop("checked");
+                    const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+                    const pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
+                    const pct = pctInput / 100;
+                    if (isDirect) { dirCost += cost; dirEarned += cost * pct; }
                 });
-            }
-        }
 
-        function checkBudgetConsistency() {
-            let taskTotals = {};
+                const dirPct = dirCost === 0 ? 0 : dirEarned / dirCost;
+                $("#dirPctFooter").text((dirPct * 100).toFixed(1) + "%");
+                $("#dirPctInput").val(dirPct);
 
-            // --- Sum deliverables per OBID ---
-            $("#deliverablesTable tbody tr").each(function () {
-                if ($(this).find("button[name='addNew']").length) return;
+                // Second pass: update visible rows
+                $("#deliverablesTable tbody tr:visible").each(function () {
+                    if ($(this).find("button[name='addNew']").length) return;
 
-                const obid = $(this).find("select[name*='OBID']").val();
-                if (!obid) return;
+                    const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
+                    const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+                    const isDirect = $(this).find("input[type='checkbox']").prop("checked");
+                    const pctInput = parseFloat($(this).find(".pctInput").val()) || 0;
+                    const pct = isDirect ? pctInput / 100 : dirPct;
 
-                const hrs = parseFloat($(this).find(".delHrs").val()) || 0;
-                const cost = parseFloat($(this).find(".delCost").val()) || 0;
+                    $(this).find(".pctInput").val((pct * 100).toFixed(0));
 
-                if (!taskTotals[obid]) {
-                    taskTotals[obid] = { hrs: 0, cost: 0, rows: [] };
-                }
-                taskTotals[obid].hrs += hrs;
-                taskTotals[obid].cost += cost;
-                taskTotals[obid].rows.push($(this));
-            });
+                    const earnedHrs = hrs * pct;
+                    const earnedCost = cost * pct;
 
-            // --- Compare to budget per OBID ---
-            for (let obid in taskTotals) {
-                const data = taskTotals[obid];
+                    $(this).find(".earnedHrs").val(earnedHrs.toFixed(2));
+                    $(this).find(".earnedCost").val(earnedCost.toFixed(2));
+                    $(this).find(".pctHidden").val(pct);
 
-                data.rows.forEach(row => {
-                    const budgetHrs = parseFloat(row.find(".budgetHrs").val()) || 0;
-                    const budgetCost = parseFloat(row.find(".budgetCost").val()) || 0;
-
-                    // Flag mismatch
-                    const hrsMismatch = data.hrs !== budgetHrs;
-                    const costMismatch = data.cost !== budgetCost;
-
-                    row.find(".delHrs, .budgetHrs").toggleClass("text-danger", hrsMismatch);
-                    row.find(".delCost, .budgetCost").toggleClass("text-danger", costMismatch);
+                    totalHours += hrs;
+                    totalCost += cost;
+                    totalEarnedHrs += earnedHrs;
+                    totalEarnedCost += earnedCost;
                 });
-            }
-        }
 
-        function bindAutoCostCalc() {
+                $("#totalHours").text(totalHours.toFixed(2));
+                $("#totalCost").text(totalCost.toFixed(2));
+                $("#totalEarnedHrs").text(totalEarnedHrs.toFixed(2));
+                $("#totalEarnedCost").text(totalEarnedCost.toFixed(2));
+                $("#totalCumulPct").text(totalCost === 0 ? "0%" : ((totalEarnedCost / totalCost) * 100).toFixed(1) + "%");
+
+                checkBudgetMatch();
+                checkBudgetConsistency();
+            }
+
+            // --- Budget checks ---
+            function checkBudgetMatch() {
+                let obidTotals = {};
+                $("#deliverablesTable tbody tr").each(function () {
+                    if ($(this).find("button[name='addNew']").length) return;
+                    const obid = $(this).find("input[name*='OBID']").val();
+                    const myTask = $(this).find("input[name*='MYTASK']").val();
+                    const hrs = parseFloat($(this).find("input[name*='DelHours']").val()) || 0;
+                    const cost = parseFloat($(this).find("input[name*='DelCost']").val()) || 0;
+                    const key = obid + "|" + myTask;
+                    if (!obidTotals[key]) obidTotals[key] = { hrs:0, cost:0, budgetHrs:0, budgetCost:0, rows:[] };
+                    obidTotals[key].hrs += hrs;
+                    obidTotals[key].cost += cost;
+                    obidTotals[key].rows.push(this);
+                    obidTotals[key].budgetHrs = parseFloat($(this).find(".budgetHrs").val()) || 0;
+                    obidTotals[key].budgetCost = parseFloat($(this).find(".budgetCost").val()) || 0;
+                });
+
+                for (let key in obidTotals) {
+                    const totals = obidTotals[key];
+                    const hrsMatch = Math.abs(totals.hrs - totals.budgetHrs) < 0.01;
+                    const costMatch = Math.abs(totals.cost - totals.budgetCost) < 0.01;
+                    totals.rows.forEach(row => {
+                        $(row).find("input[name*='DelHours']").toggleClass("text-danger", !hrsMatch);
+                        $(row).find("input[name*='DelCost']").toggleClass("text-danger", !costMatch);
+                    });
+                }
+            }
+
+            function checkBudgetConsistency() {
+                let taskTotals = {};
+                $("#deliverablesTable tbody tr").each(function () {
+                    if ($(this).find("button[name='addNew']").length) return;
+                    const obid = $(this).find("select[name*='OBID']").val();
+                    if (!obid) return;
+                    const hrs = parseFloat($(this).find(".delHrs").val()) || 0;
+                    const cost = parseFloat($(this).find(".delCost").val()) || 0;
+                    if (!taskTotals[obid]) taskTotals[obid] = { hrs:0, cost:0, rows:[] };
+                    taskTotals[obid].hrs += hrs;
+                    taskTotals[obid].cost += cost;
+                    taskTotals[obid].rows.push($(this));
+                });
+
+                for (let obid in taskTotals) {
+                    const data = taskTotals[obid];
+                    data.rows.forEach(row => {
+                        const budgetHrs = parseFloat(row.find(".budgetHrs").val()) || 0;
+                        const budgetCost = parseFloat(row.find(".budgetCost").val()) || 0;
+                        const hrsMismatch = data.hrs !== budgetHrs;
+                        const costMismatch = data.cost !== budgetCost;
+                        row.find(".delHrs, .budgetHrs").toggleClass("text-danger", hrsMismatch);
+                        row.find(".delCost, .budgetCost").toggleClass("text-danger", costMismatch);
+                    });
+                }
+            }
+
+            // --- Auto cost calculation ---
             $("#deliverablesTable").on("input", ".delHrs", function () {
                 const row = $(this).closest("tr");
                 const hrs = parseFloat($(this).val()) || 0;
                 const budgetHrs = parseFloat(row.find(".budgetHrs").val()) || 0;
                 const budgetCost = parseFloat(row.find(".budgetCost").val()) || 0;
-
                 const rate = budgetHrs === 0 ? 0 : budgetCost / budgetHrs;
                 const newCost = hrs * rate;
-
-                // update both display + hidden
                 row.find(".delCost").val(newCost.toFixed(2));
                 row.find(".delCostDisplay").val(newCost.toFixed(2));
-
-                recalcTotals(); // trigger consistency + totals check
+                recalcTotals();
             });
-        }
 
-
-        function bindNewRowAutoCalc() {
             $("#newDelHrs").on("input", function () {
                 const hrs = parseFloat($(this).val()) || 0;
                 const budgetHrs = parseFloat($("#newBudgetHrs").val()) || 0;
                 const budgetCost = parseFloat($("#newBudgetCost").val()) || 0;
-
                 const rate = budgetHrs === 0 ? 0 : budgetCost / budgetHrs;
                 const newCost = hrs * rate;
-
                 $("#newDelCost").val(newCost.toFixed(2));
                 $("#newDelCostDisplay").val(newCost.toFixed(2));
-
-                recalcTotals(); // keep consistency check live
+                recalcTotals();
             });
-        }
 
-        //stuff for modal
-                // preload budget info into a JS object
-        var budgetData = {
-            @foreach (var task in Model.vwBudgetActuals)
-            {
-                    <text>
-                    "@task.OBID": { currhrs: @task.CURRHRS, currcost: @task.CURRCOST },
-                    </text>
-            }
-        };
-
-        function recalcDelCost() {
-            var obid = document.getElementById("obid").value;
-            var hrs = parseFloat(document.getElementById("delHours").value) || 0;
-
-            if (obid && budgetData[obid]) {
-                var currhrs = budgetData[obid].currhrs || 0;
-                var currcost = budgetData[obid].currcost || 0;
-
-                if (currhrs > 0) {
-                    var cost = (hrs / currhrs) * currcost;
-                    document.getElementById("delCost").value = cost.toFixed(2);
-                } else {
-                    document.getElementById("delCost").value = "0.00";
+            // --- Modal cost calculation ---
+            $(document).on("input", "#delHours, #obid", function () {
+                const obid = $("#obid").val();
+                const hrs = parseFloat($("#delHours").val()) || 0;
+                let cost = 0;
+                if (obid && budgetData[obid]) {
+                    const currhrs = budgetData[obid].currhrs || 0;
+                    const currcost = budgetData[obid].currcost || 0;
+                    if (currhrs > 0) cost = (hrs / currhrs) * currcost;
                 }
-            }
-        }
+                $("#delCostDisplay").val(cost.toFixed(2));
+                $("#delCost").val(cost.toFixed(2));
+            });
 
-        // recalc cost when OBID or hours change
-        document.getElementById("obid").addEventListener("change", recalcDelCost);
-        document.getElementById("delHours").addEventListener("input", recalcDelCost);
-
-
-        // --- Hook up events ---
-        $(document).ready(function () {
-            bindAutoCostCalc();
-            bindNewRowAutoCalc();
-            recalcTotals();
-            $("#deliverablesTable tbody input").on("input change", recalcTotals);
-            // real-time filter that includes select option text + hidden inputs
+            // --- Real-time filtering ---
             $("#filterBox").on("input", function () {
                 const value = $(this).val().toLowerCase().trim();
-
                 $("#deliverablesTable tbody tr").each(function () {
-                    // skip Add New row
                     if ($(this).find("button[name='addNew']").length) return;
-
                     let rowTextParts = [];
-
-                    // iterate each cell and pick the best searchable text:
                     $(this).find("td").each(function () {
-                    const $cell = $(this);
-
-                    // 1) if there's a select, use selected option text
-                    const $select = $cell.find("select");
-                    if ($select.length) {
-                        rowTextParts.push($select.find("option:selected").text() || "");
-                        return; // next td
-                    }
-
-                    // 2) if there are inputs (including hidden), add their values
-                    const $inputs = $cell.find("input");
-                    if ($inputs.length) {
-                        $inputs.each(function () {
-                            rowTextParts.push($(this).val() || "");
-                        });
-                        return;
-                    }
-
-                    // 3) otherwise fall back to the cell text
-                    rowTextParts.push($cell.text() || "");
+                        const $cell = $(this);
+                        const $select = $cell.find("select");
+                        if ($select.length) { rowTextParts.push($select.find("option:selected").text() || ""); return; }
+                        const $inputs = $cell.find("input");
+                        if ($inputs.length) { $inputs.each(function(){ rowTextParts.push($(this).val()||""); }); return; }
+                        rowTextParts.push($cell.text() || "");
+                    });
+                    $(this).toggle(rowTextParts.join(" ").toLowerCase().indexOf(value) !== -1);
                 });
-
-                const rowText = rowTextParts.join(" ").toLowerCase();
-                $(this).toggle(rowText.indexOf(value) !== -1);
+                recalcTotals();
             });
 
+            // --- Run budget check on input changes ---
+            $(document).on("input", "input[name*='DelHours'], input[name*='DelCost']", function () {
+                checkBudgetMatch();
+            });
+
+            // --- Check SelectedDateTo is Saturday ---
+            function checkSaturdayButtons() {
+                $("input[name='SelectedDateTo']").each(function(){
+                    const btn = $(this).closest("form").find("button[type='submit']");
+                    const dt = new Date(this.value + "T00:00:00"); // fix parsing
+                    btn.prop("disabled", isNaN(dt.getTime()) || dt.getDay() !== 6);
+
+                    // optional warning
+                    let warning = $(this).siblings(".date-warning");
+                    if (!warning.length) $(this).after('<span class="date-warning text-danger ml-2">Must be Saturday</span>');
+                    $(this).siblings(".date-warning").toggle(dt.getDay() !== 6);
+                });
+            }
+
+            $(document).on("change", "input[name='SelectedDateTo']", checkSaturdayButtons);
+            checkSaturdayButtons(); // run on page load
+
+            // --- Initial calculations ---
             recalcTotals();
-        });
-        });
-
-        // Run budget check whenever hours or cost are edited
-        $(document).on("input", "input[name*='DelHours'], input[name*='DelCost']", function () {
-            checkBudgetMatch();
-        });
-
-
         });
     </script>
 }
+

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ProjectPano")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+893312a2a10fc3eb394d399268c742dd1a7d8f16")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62cf37959687abc2c4dc2ea602977c31015150df")]
 [assembly: System.Reflection.AssemblyProductAttribute("ProjectPano")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ProjectPano")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

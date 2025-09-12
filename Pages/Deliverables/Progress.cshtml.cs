@@ -41,22 +41,31 @@ namespace ProjectPano.Pages.Deliverables
 
         [BindProperty]
         public tbDeliverableHist? NewDeliverable { get; set; }
+
         [BindProperty]
         public decimal DirPct { get; set; }
 
+        [BindProperty]
+        public List<int> SelectedFrom { get; set; } = new();
+
+
+
         public List<vwBudgetActuals_REVISED> vwBudgetActuals { get; set; } = new List<vwBudgetActuals_REVISED>();
 
-        public void OnGet(int? JobId,DateTime? progressDate)
+        public void OnGet()
         {
             var today = DateTime.Today;
             CurrWeekEnding = GetWE.GetWeekEnding(today);
-            progressDate = CurrWeekEnding;
+
+            if (!ProgressDate.HasValue)
+                ProgressDate = CurrWeekEnding;
 
             if (NewDeliverable == null)
                 NewDeliverable = new tbDeliverableHist();
-            NewDeliverable.ProgressDate = progressDate.Value;
 
-            // Always populate the base list
+            NewDeliverable.JobID = JobId ?? 0; // make sure hidden input has value
+            NewDeliverable.ProgressDate = ProgressDate.Value;
+
             OpenProj = dal.GetAllOpenProj(configuration);
             var filteredJobs = OpenProj
                 .Where(j => j.BillingStatus == "In Process" && j.CorpID == 1)
@@ -68,53 +77,35 @@ namespace ProjectPano.Pages.Deliverables
 
             if (JobId.HasValue)
             {
+                NewDeliverable.JobID=JobId.Value;
+
                 vwBudgetActuals = dal.GetVWBudgetActuals(JobId.Value, configuration);
 
                 var dates = dal.GetProgressDatesByJob(JobId.Value, configuration)
                                .OrderByDescending(d => d)
                                .ToList();
 
-                // If no ProgressDate was supplied, default to the latest one
                 if (!ProgressDate.HasValue && dates.Any())
-                {
-                    ProgressDate = dates.First(); // newest date
-                }
+                    ProgressDate = dates.First();
 
-                ProgressDateSelectList = new SelectList(
-                    dates,
-                    ProgressDate // this sets the selected value
-                );
+                ProgressDateSelectList = new SelectList(dates, ProgressDate);
 
                 if (ProgressDate.HasValue)
                 {
-                    NewDeliverable.ProgressDate = progressDate.Value;
+                    NewDeliverable.ProgressDate = ProgressDate.Value;
                     Deliverables = dal.GetDeliverablesByJobAndDate(
                         JobId.Value, ProgressDate.Value, configuration
                     );
                 }
             }
-
         }
+
 
         public IActionResult OnPost(int? jobId, int? deleteId, int? editId, int? addNew)
         {
             if (deleteId.HasValue)
             {
                 dal.DeleteDeliverableHist(deleteId.Value, configuration);
-                return RedirectToPage(new { JobId, ProgressDate });
-            }
-
-            if (addNew.HasValue && NewDeliverable != null)
-            {
-                // fill in required context fields
-                NewDeliverable.JobID = jobId.Value;
-                //NewDeliverable.ProgressDate = ProgressDate;
-
-                // Default Direct to true if not explicitly set
-                if (NewDeliverable.Direct == null)
-                    NewDeliverable.Direct = true;
-
-                dal.InsertDeliverableHist(NewDeliverable, configuration);
                 return RedirectToPage(new { JobId, ProgressDate });
             }
 
@@ -130,6 +121,108 @@ namespace ProjectPano.Pages.Deliverables
 
             return RedirectToPage(new { JobId, ProgressDate });
         }
+
+        public async Task<IActionResult> OnPostAddNewAsync()
+        {
+            if (NewDeliverable != null)
+            {
+                //NewDeliverable.JobID = JobId ?? 0;
+                //NewDeliverable.ProgressDate = ProgressDate ?? DateTime.Today;
+
+                //delete this later 
+                //Console.WriteLine($"Hidden JobID: {NewDeliverable.JobID}");
+                //Console.WriteLine($"PageModel JobId: {JobId}");
+
+                //Console.WriteLine($"JobID: {JobId}");
+                //Console.WriteLine($"OBID: {NewDeliverable.OBID}");
+                //Console.WriteLine($"DelName: {NewDeliverable.DelName}");
+                //Console.WriteLine($"DelHours: {NewDeliverable.DelHours}");
+                //Console.WriteLine($"DelCost: {NewDeliverable.DelCost}");
+                //Console.WriteLine($"DelPctCumul: {NewDeliverable.DelPctCumul}");
+                //Console.WriteLine($"ProgressDate: {NewDeliverable.ProgressDate}");
+                //Console.WriteLine($"Direct: {NewDeliverable.Direct}");
+                //Console.WriteLine($"DirPct: {NewDeliverable.DirPct}");
+                //Console.WriteLine($"DelEarnedHrs: {NewDeliverable.DelEarnedHrs}");
+                //Console.WriteLine($"DelEarnedCost: {NewDeliverable.DelEarnedCost}");
+
+                // ? set defaults that could possibly be null
+                if (NewDeliverable.Direct == null)
+                    NewDeliverable.Direct = true;
+
+                if (NewDeliverable.DelPctCumul == null)
+                    NewDeliverable.DelPctCumul = 0;
+
+                if (NewDeliverable.DelEarnedHrs == null)
+                    NewDeliverable.DelEarnedHrs = 0;
+
+                if (NewDeliverable.DelEarnedCost == null)
+                    NewDeliverable.DelEarnedCost = 0;
+
+                if (NewDeliverable.DirPct == null)
+                    NewDeliverable.DirPct = 0;
+
+                if (!NewDeliverable.ProgressDate.HasValue)
+                    NewDeliverable.ProgressDate = ProgressDate; // fallback to page model, if needed
+
+                NewDeliverable.Created = DateTime.Now;
+                NewDeliverable.Modified = DateTime.Now;
+
+                dal.InsertDeliverableHist(NewDeliverable, configuration);
+            }
+
+            return RedirectToPage(new { JobId, ProgressDate });
+        }
+
+        public async Task<IActionResult> OnPostCopyProgressAsync(DateTime? SelectedDateFrom, DateTime? SelectedDateTo)
+        {
+            Console.WriteLine($"CopyProgress called: From {SelectedDateFrom}, To {SelectedDateTo}");
+
+            if (!JobId.HasValue || !SelectedDateFrom.HasValue || !SelectedDateTo.HasValue)
+                return RedirectToPage(new { JobId, ProgressDate });
+
+            if (SelectedDateTo.Value.DayOfWeek != DayOfWeek.Saturday)
+            {
+                ModelState.AddModelError("", "Selected target date must be a Saturday.");
+                return Page();
+            }
+
+            // --- Fetch records using only the date portion ---
+            var existingDeliverables = dal.GetDeliverablesByJobAndDate(JobId.Value, SelectedDateFrom.Value.Date, configuration);
+
+            if (existingDeliverables == null || !existingDeliverables.Any())
+            {
+                ModelState.AddModelError("", "No deliverables found for the selected date.");
+                return Page();
+            }
+
+            foreach (var d in existingDeliverables)
+            {
+                var newDel = new tbDeliverableHist
+                {
+                    JobID = d.JobID,
+                    OBID = d.OBID,
+                    DelName = d.DelName,
+                    DelHours = d.DelHours,
+                    DelCost = d.DelCost,
+                    DelPctCumul = d.DelPctCumul,
+                    Direct = d.Direct,
+                    DelComment = d.DelComment,
+                    ProgressDate = SelectedDateTo.Value.Date, // force midnight
+                    Created = DateTime.Now,
+                    Modified = DateTime.Now,
+                    DirPct = d.DirPct,
+                    DelEarnedHrs = d.DelEarnedHrs,
+                    DelEarnedCost = d.DelEarnedCost
+                };
+
+                dal.InsertDeliverableHist(newDel, configuration);
+            }
+
+            return RedirectToPage(new { JobId, ProgressDate = SelectedDateTo.Value.Date });
+        }
+
+
+
 
     }
 }
