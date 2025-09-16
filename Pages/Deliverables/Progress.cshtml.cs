@@ -88,7 +88,18 @@ namespace ProjectPano.Pages.Deliverables
                 if (!ProgressDate.HasValue && dates.Any())
                     ProgressDate = dates.First();
 
-                ProgressDateSelectList = new SelectList(dates, ProgressDate);
+                //ProgressDateSelectList = new SelectList(dates, ProgressDate);
+
+                // Convert dates to yyyy-MM-dd strings for the dropdown
+                ProgressDateSelectList = new SelectList(
+                    dates.Select(d => new SelectListItem
+                    {
+                        Value = d.ToString("yyyy-MM-dd"),
+                        Text = d.ToString("yyyy-MM-dd")
+                    }),
+                    "Value", "Text",
+                    ProgressDate?.ToString("yyyy-MM-dd")  // set selected value
+                );
 
                 if (ProgressDate.HasValue)
                 {
@@ -119,7 +130,15 @@ namespace ProjectPano.Pages.Deliverables
                 }
             }
 
-            return RedirectToPage(new { JobId, ProgressDate });
+            //return RedirectToPage(new { JobId, ProgressDate });
+
+            return RedirectToPage(new
+            {
+                //JobId = jobId,
+                JobId,
+                ProgressDate = ProgressDate?.ToString("yyyy-MM-dd")
+            });
+
         }
 
         public async Task<IActionResult> OnPostAddNewAsync()
@@ -170,12 +189,18 @@ namespace ProjectPano.Pages.Deliverables
                 dal.InsertDeliverableHist(NewDeliverable, configuration);
             }
 
-            return RedirectToPage(new { JobId, ProgressDate });
+            //return RedirectToPage(new { JobId, ProgressDate });
+            return RedirectToPage(new
+            {
+                JobId ,
+                ProgressDate = ProgressDate?.ToString("yyyy-MM-dd")
+            });
         }
 
         public async Task<IActionResult> OnPostCopyProgressAsync(DateTime? SelectedDateFrom, DateTime? SelectedDateTo)
         {
             Console.WriteLine($"CopyProgress called: From {SelectedDateFrom}, To {SelectedDateTo}");
+            Console.WriteLine($"Looking for JobID={JobId}, Date={SelectedDateFrom.Value.Date}");
 
             if (!JobId.HasValue || !SelectedDateFrom.HasValue || !SelectedDateTo.HasValue)
                 return RedirectToPage(new { JobId, ProgressDate });
@@ -189,9 +214,27 @@ namespace ProjectPano.Pages.Deliverables
             // --- Fetch records using only the date portion ---
             var existingDeliverables = dal.GetDeliverablesByJobAndDate(JobId.Value, SelectedDateFrom.Value.Date, configuration);
 
+            if (existingDeliverables != null && existingDeliverables.Any())
+            {
+                var first = existingDeliverables.First();
+
+                Console.WriteLine($"JobID: {JobId}");
+                Console.WriteLine($"OBID: {first.OBID}");
+                Console.WriteLine($"DelName: {first.DelName}");
+                Console.WriteLine($"DelHours: {first.DelHours}");
+                Console.WriteLine($"DelCost: {first.DelCost}");
+                Console.WriteLine($"DelPctCumul: {first.DelPctCumul}");
+                Console.WriteLine($"ProgressDate: {first.ProgressDate}");
+                Console.WriteLine($"Direct: {first.Direct}");
+                Console.WriteLine($"DirPct: {first.DirPct}");
+                Console.WriteLine($"DelEarnedHrs: {first.DelEarnedHrs}");
+                Console.WriteLine($"DelEarnedCost: {first.DelEarnedCost}");
+            }
+
             if (existingDeliverables == null || !existingDeliverables.Any())
             {
                 ModelState.AddModelError("", "No deliverables found for the selected date.");
+                Console.WriteLine("existing deliverables is null");
                 return Page();
             }
 
@@ -218,7 +261,13 @@ namespace ProjectPano.Pages.Deliverables
                 dal.InsertDeliverableHist(newDel, configuration);
             }
 
-            return RedirectToPage(new { JobId, ProgressDate = SelectedDateTo.Value.Date });
+            //return RedirectToPage(new { JobId, ProgressDate = SelectedDateTo.Value.Date });
+            return RedirectToPage(new
+            {
+                JobId,
+                ProgressDate = SelectedDateTo?.ToString("yyyy-MM-dd")
+            });
+
         }
 
 

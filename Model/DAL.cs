@@ -452,7 +452,8 @@ namespace ProjectPano.Model
                             ETC_Hrs = Convert.ToDecimal(reader["ETC_Hrs"]),
                             ETC_Cost = Convert.ToDecimal(reader["ETC_Cost"]),
                             CurrWkHrs = Convert.ToDecimal(reader["CurrWkHrs"]),
-                            CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"])
+                            CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"]),
+                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"])
                         };
 
                         ListVWBudgetActuals.Add(record);
@@ -606,7 +607,8 @@ namespace ProjectPano.Model
                             ETC_Hrs = Convert.ToDecimal(reader["ETC_Hrs"]),
                             ETC_Cost = Convert.ToDecimal(reader["ETC_Cost"]),
                             CurrWkHrs = Convert.ToDecimal(reader["CurrWkHrs"]),
-                            CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"])
+                            CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"]),
+                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"])
                         };
 
                         ListVWBudgetActualsAllActive.Add(record);
@@ -2300,7 +2302,7 @@ namespace ProjectPano.Model
                         PlanFinishDate = reader.IsDBNull(reader.GetOrdinal("PlanFinishDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanFinishDate")),
                         PlanStartDate = reader.IsDBNull(reader.GetOrdinal("PlanStartDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanStartDate")),
                         CURRHRS = reader.IsDBNull(reader.GetOrdinal("CURRHRS")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRHRS")),
-                        CURRCOST = reader.IsDBNull(reader.GetOrdinal("CURRCOST")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRCOST")),
+                        CURRCOST = reader.IsDBNull(reader.GetOrdinal("CURRCOST")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRCOST"))
                     };
 
                     list.Add(deliverable);

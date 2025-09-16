@@ -3,16 +3,24 @@
   "WorkspaceRootPath": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\etc\\index1.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\etc\\index1.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\etc\\index1.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\etc\\index1.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\progress.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\deliverables\\progress.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\upload.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -30,7 +38,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 159,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,33 +50,59 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index1.cshtml",
+              "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ETC\\Index1.cshtml",
+              "RelativeDocumentMoniker": "Pages\\ETC\\Index1.cshtml",
+              "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ETC\\Index1.cshtml",
+              "RelativeToolTip": "Pages\\ETC\\Index1.cshtml",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAAAJYAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-09-15T23:26:04.359Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "Index1.cshtml.cs",
+              "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ETC\\Index1.cshtml.cs",
+              "RelativeDocumentMoniker": "Pages\\ETC\\Index1.cshtml.cs",
+              "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ETC\\Index1.cshtml.cs",
+              "RelativeToolTip": "Pages\\ETC\\Index1.cshtml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T23:26:03.329Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "Progress.cshtml",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Progress.cshtml",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml",
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAACUAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAvwCIAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-09T23:48:59.821Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "Progress.cshtml.cs",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Progress.cshtml.cs",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml.cs",
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml.cs",
-              "ViewState": "AgIAALsAAAAAAAAAAADwv80AAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAAPgAAAAAAAAAAAAmwAABAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T23:49:04.817Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Upload.cshtml",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Upload.cshtml",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Upload.cshtml",
@@ -80,7 +114,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Upload.cshtml.cs",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Upload.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Upload.cshtml.cs",
@@ -98,7 +132,7 @@
               "RelativeDocumentMoniker": "Model\\DAL.cs",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Model\\DAL.cs",
               "RelativeToolTip": "Model\\DAL.cs",
-              "ViewState": "AgIAAMUIAAAAAAAAAAAvwMoIAABCAAAAAAAAAA==",
+              "ViewState": "AgIAAP8IAAAAAAAAAAAvwAkJAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T19:32:46.512Z",
               "EditorCaption": ""

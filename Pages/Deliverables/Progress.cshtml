@@ -34,6 +34,7 @@
         <!-- Copy to new WE inline form -->
         <form method="post" asp-page-handler="CopyProgress" class="d-flex align-items-center ms-3">
            @*  <input type="hidden" name="SelectedDateFrom" value="@Model.ProgressDate?.ToString("o")" /> *@
+            <input type="hidden" name="JobId" value="@Model.JobId" />
             <input type="hidden" name="SelectedDateFrom" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" />
 
 
@@ -132,25 +133,33 @@
                             <!-- Visible % Complete (0–100) -->
                             <input type="number"
                                    class="form-control text-end pctInput"
-                                   min="0"
-                                   max="100"
-                                   step="1"
+                                   min="0" max="100" step="1"
                                    value="@(d.DelPctCumul * 100)"
                                    @(d.Direct == false ? "disabled" : "") />
 
                             <!-- Hidden decimal value for posting -->
                             <input type="hidden"
-                                   class="pctHidden"
-                                   asp-for="Deliverables[@i].DelPctCumul" />
+                                   asp-for="Deliverables[@i].DelPctCumul"
+                                   class="pctHidden" />
                         </td>
 
                         <td><input asp-for="Deliverables[@i].DelComment" class="form-control" /></td>
 
                         <td>
                             <!-- Visible earned cost, updates via JS -->
-                            @* <input type="text" class="form-control text-end earnedCost" readonly value="@(d.DelCost* d.DelPctCumul).ToString(" F2")" /> *@
-                            <input type="text" class="form-control earnedCost text-end" readonly /> <!-- Earned Cost -->
-                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedCost" value="@(d.DelCost* d.DelPctCumul)" />
+@*                             <input type="text" class="form-control earnedCost text-end" readonly /> <!-- Earned Cost -->
+                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedCost" value="@(d.DelCost* d.DelPctCumul)" /> *@
+
+                            <!-- Visible earned cost -->
+                            <input type="text" class="form-control earnedCostDisplay text-end" readonly />
+
+                            <!-- Hidden earned cost bound for posting -->
+                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedCost"
+                                   class="earnedCostHidden" />
+
+                            <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs"
+                                   class="earnedHrsHidden" />
+
                         </td>
 
                         <td>
@@ -172,6 +181,8 @@
                         </td>
 
                         <input type="hidden" asp-for="Deliverables[@i].DelEarnedHrs" value="@(d.DelHours* d.DelPctCumul)" />
+                        <input type="hidden" name="JobId" value="@Model.JobId" />
+                        @* <input type="hidden" name="ProgressDate" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" /> *@
                     </tr>
                 }
             </tbody>
@@ -192,6 +203,8 @@
 
         </table>
         <input type="hidden" asp-for="DirPct" id="dirPctInput" />
+        @* <input type="hidden" asp-for="ProgressDate" value="@Model.ProgressDate?.ToString("yyyy-MM-dd")" /> *@
+        <input type="hidden" name="ProgressDate" id="progressHidden" />
 
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
@@ -210,6 +223,7 @@
 
             <form method="post" asp-page-handler="AddNew">
                 <input type="hidden" name="JobId" value="@Model.JobId" />
+                <input type="hidden" name="ProgressDate" value="@Model.ProgressDate?.ToString("o")" />
 
                 <input type="hidden" name="NewDeliverable.JobID" value="@Model.JobId" />
                 <input type="hidden" name="NewDeliverable.ProgressDate" value="@Model.ProgressDate?.ToString("o")" />
@@ -309,6 +323,9 @@
     <script>
         $(document).ready(function () {
 
+            // initialize hidden field from dropdown at page load
+            $("#progressHidden").val($("#progressDropdown").val());
+
             // --- Dropdowns ---
             $('#jobDropdown').selectpicker();
             $('#progressDropdown').selectpicker();
@@ -370,9 +387,17 @@
                     const earnedHrs = hrs * pct;
                     const earnedCost = cost * pct;
 
-                    $(this).find(".earnedHrs").val(earnedHrs.toFixed(2));
+                    //$(this).find(".earnedHrs").val(earnedHrs.toFixed(2));
                     $(this).find(".earnedCost").val(earnedCost.toFixed(2));
                     $(this).find(".pctHidden").val(pct);
+                    // show in visible readonly box
+                    $(this).find(".earnedCostDisplay").val(earnedCost.toFixed(2));
+
+                    // push to hidden input for posting
+                    $(this).find(".earnedCostHidden").val(earnedCost.toFixed(2));
+
+                    // push to hidden input for posting
+                    $(this).find(".earnedHrsHidden").val(earnedHrs.toFixed(2));
 
                     totalHours += hrs;
                     totalCost += cost;
@@ -446,6 +471,18 @@
                 }
             }
 
+            //needed this bc delpctcumul wasnt posting back to sql
+            $("form").on("submit", function () {
+                // make sure all rows push their latest values into hidden fields
+                recalcTotals();
+
+                // (optional debugging)
+                $("#deliverablesTable tbody tr").each(function () {
+                    console.log("Hidden pct for row:", $(this).find(".pctHidden").val());
+                    console.log("Hidden earned cost for row:", $(this).find(".earnedCostHidden").val());
+                });
+            });
+
             // --- Auto cost calculation ---
             $("#deliverablesTable").on("input", ".delHrs", function () {
                 const row = $(this).closest("tr");
@@ -468,6 +505,11 @@
                 $("#newDelCost").val(newCost.toFixed(2));
                 $("#newDelCostDisplay").val(newCost.toFixed(2));
                 recalcTotals();
+            });
+
+            //make sure progressdate gets autopopulated on refresh
+            document.getElementById("progressDropdown").addEventListener("change", function () {
+                document.getElementById("progressHidden").value = this.value;
             });
 
             // --- Modal cost calculation ---

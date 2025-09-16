@@ -116,6 +116,8 @@
 
         decimal totalOB_COST = 0, totalUnApprovedCNCOST = 0, totalApprovedCNCOST = 0;
         decimal totalCURRCOST = 0, totalPrevWkCost = 0, totalEAC_Cost = 0, totalETCCost = 0, totalCurrWkCost = 0;
+
+        decimal totalOBID_EarnedCost = 0;
     }
 
     <tbody>
@@ -134,6 +136,8 @@
 
             decimal g_OB_COST = 0, g_UnApprovedCNCOST = 0, g_ApprovedCNCOST = 0, g_CURRCOST = 0;
             decimal g_PrevWkCost = 0, g_EAC_Cost = 0, g_ETCCost = 0, g_CurrWkCost = 0;
+
+            decimal g_OBID_EarnedCost = 0;
 
             <!-- Group Header -->
             <tr style="background-color:#eee; font-weight:bold;">
@@ -160,6 +164,8 @@
                 g_EAC_Cost += item.EAC_Cost;
                 g_ETCCost += item.ETC_Cost;
                 g_CurrWkCost += item.CurrWkCost;
+
+                g_OBID_EarnedCost += item.OBIDEarnedCost;
 
                 <!-- detail row (your existing cells) -->
                 <tr>
@@ -233,7 +239,9 @@
                 <td class="text-right">
                     @(g_CURRCOST != 0 ? String.Format("{0:P0}", g_PrevWkCost / g_CURRCOST) : "-")
                 </td>
-                <td class="text-right">–</td>
+                <td class="text-right">
+                    @(g_CURRCOST != 0 ? String.Format("{0:P0}", g_OBID_EarnedCost / g_CURRCOST) : "-")
+                </td>
                 <td>0</td>
             </tr>
         }
@@ -258,6 +266,8 @@
         var grandCurrWkCost = Model.vwBudgetActuals.Sum(x => x.CurrWkCost);
         var grandETCCost = Model.vwBudgetActuals.Sum(x => x.ETC_Cost);
         var grandEACCost = Model.vwBudgetActuals.Sum(x => x.EAC_Cost);
+
+        var grandOBIDEarnedCost = Model.vwBudgetActuals.Sum(x => x.OBIDEarnedCost);
     }
 
     <tfoot>
@@ -302,7 +312,16 @@
                     @("-")
                 }
             </td>
-            <td class="text-right">–</td> <!-- % Complete total typically not meaningful across tasks -->
+            <td class="text-right">
+                @if (@Model.vwBudgetActuals.Sum(x => x.CURRCOST) != 0)
+                {
+                    @String.Format("{0:P0}", @Model.vwBudgetActuals.Sum(x => x.OBIDEarnedCost) / @Model.vwBudgetActuals.Sum(x => x.CURRCOST))
+                }
+                else
+                {
+                    @("-")
+                }
+            </td> <!-- % Complete total typically not meaningful across tasks -->
 @*             <td class="text-right">
                 @if (totalCURRCOST != 0 && totalPrevWkCost != 0)
                 {

@@ -57,6 +57,7 @@
         public decimal CurrWkHrs { get; set; }
 
         public decimal CurrWkCost { get; set; }
+        public decimal OBIDEarnedCost { get; set; }
 
 
     }
