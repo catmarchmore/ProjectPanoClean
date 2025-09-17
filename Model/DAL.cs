@@ -144,6 +144,31 @@ namespace ProjectPano.Model
             return ListJobStatus;
         }
 
+        public List<vwActiveJobClient> GetActiveJobClient(IConfiguration configuration)
+        {
+            List<vwActiveJobClient> ListJobStatus = new List<vwActiveJobClient>();
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DBCS").ToString()))
+            {
+                SqlDataAdapter da = new SqlDataAdapter("Select * from vwActiveJobClient", con);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                if (dt.Rows.Count > 0)
+                {
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        vwActiveJobClient JobStatus = new vwActiveJobClient();
+                        JobStatus.Corp = Convert.ToString(dt.Rows[i]["Corp"]);
+                        JobStatus.ClientName = Convert.ToString(dt.Rows[i]["ClientName"]);
+                        JobStatus.CumulAwardAmt = Convert.ToDecimal(dt.Rows[i]["CumulAwardAmt"]);
+                        JobStatus.Vertical = Convert.ToString(dt.Rows[i]["Vertical"]);
+
+                        ListJobStatus.Add(JobStatus);
+                    }
+                }
+            }
+            return ListJobStatus;
+        }
+
         public List<vwNewJobs> GetNewJobs(IConfiguration configuration)
         {
             List<vwNewJobs> ListNewJobs = new List<vwNewJobs>();

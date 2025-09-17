@@ -44,6 +44,7 @@
             <th colspan="3" class="text-center">Percentages</th>
             <th>CPI</th>
             <th colspan="4" class="text-center">CPI Calcs</th>
+            <th>RATE</th>
         </tr>
 
         <tr class="custom-header-costrpt2">
@@ -74,6 +75,7 @@
             <th class="align-middle text-center">V</th>
             <th class="align-middle text-center">W</th>
             <th class="align-middle text-center">X</th>
+            <th class="align-middle text-center">Y</th>
         </tr>
 
         <tr class="custom-header-costrpt3">
@@ -117,6 +119,7 @@
             <th class="align-middle text-center">EAC <br />HRS<br />CPI</th>
             <th class="align-middle text-center">ETC <br />COST<br />CPI</th>
             <th class="align-middle text-center">EAC <br />COST<br />CPI</th>
+            <th class="align-middle text-center">AVG <br />MHR<br />RATE</th>
         </tr>
     </thead>
     @{
@@ -148,11 +151,11 @@
             decimal g_PrevWkCost = 0, g_EAC_Cost = 0, g_ETCCost = 0, g_CurrWkCost = 0;
 
             decimal g_OBID_EarnedCost = 0, g_EtcHrsCpi=0,g_EacHrsCpi=0;
-            decimal g_EtcCostCpi = 0, g_EacCostCpi = 0;
+            decimal g_EtcCostCpi = 0, g_EacCostCpi = 0, g_PrevWkCostLabor=0;
 
             <!-- Group Header -->
             <tr style="background-color:#eee; font-weight:bold;">
-                <td colspan="25">@grp.Key.DiscGroup</td>
+                <td colspan="26">@grp.Key.DiscGroup</td>
             </tr>
 
             @foreach (var item in grp)
@@ -181,6 +184,12 @@
                 g_EacHrsCpi += item.EACHrs_CPI;
                 g_EtcCostCpi += item.ETCCost_CPI;
                 g_EacCostCpi += item.EACCost_CPI;
+
+                // new variable for labor-only prev week cost
+                if (item.DiscGroup == "DIRECT LABOR")
+                {
+                    g_PrevWkCostLabor += item.PrevWkCumulCost;
+                }
 
                 <!-- detail row (your existing cells) -->
                 <tr>
@@ -227,6 +236,7 @@
                     <td class="text-right"> @item.EACHrs_CPI.ToString("N2") </td>
                     <td class="text-right bg-palegreen"> @item.ETCCost_CPI.ToString("C2") </td>
                     <td class="text-right bg-palegreen"> @item.EACCost_CPI.ToString("C2") </td>
+                    <td class="text-right bg-palegreen"> @item.AvgMhrRate.ToString("C2") </td>
 
         </tr>
                 }
@@ -271,7 +281,10 @@
                 <td class="text-right">@g_EtcHrsCpi.ToString("N2")</td>
                 <td class="text-right">@g_EacHrsCpi.ToString("N2")</td>
                 <td class="text-right bg-palegreen">@g_EtcCostCpi.ToString("C2")</td>
-                <td class="text-right bg-palegreen">@g_EtcCostCpi.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_EacCostCpi.ToString("C2")</td>
+                <td class="text-right bg-palegreen">
+                    @(g_PrevWkHrs != 0 ? String.Format("{0:C2}", g_PrevWkCostLabor / g_PrevWkHrs) : "-")
+                </td>
             </tr>
         }
     </tbody>
@@ -301,6 +314,12 @@
         var grandEacHrsCpi = Model.vwBudgetActuals.Sum(x => x.EACHrs_CPI);
         var grandEtcCostCpi = Model.vwBudgetActuals.Sum(x => x.ETCCost_CPI);
         var grandEacCostCpi = Model.vwBudgetActuals.Sum(x => x.EACCost_CPI);
+        var grandPrevWkLaborHrs = Model.vwBudgetActuals
+            .Where(x => x.DiscGroup == "DIRECT LABOR")
+            .Sum(x => (decimal?)x.PrevWkCumulHrs);
+        var grandPrevWkLaborCost = Model.vwBudgetActuals
+            .Where(x => x.DiscGroup == "DIRECT LABOR")
+            .Sum(x => (decimal?)x.PrevWkCumulCost);
     }
 
     <tfoot>
@@ -370,6 +389,26 @@
             <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.EACHrs_CPI).ToString("N2")</td>
             <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.ETCCost_CPI).ToString("C2")</td>
             <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.EACCost_CPI).ToString("C2")</td>
+@*             <td class="text-right bg-palegreen">
+                @if (@Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs) != 0)
+                {
+                    @String.Format("{0:C2}", @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulCost) / @Model.vwBudgetActuals.Sum(x => x.PrevWkCumulHrs))                
+                }
+                else
+                {
+                    @("-")
+                }
+            </td> *@
+            <td class="bg-palegreen text-right col-dollars">
+                @if (grandPrevWkLaborHrs !=0)
+                {
+                    @string.Format("{0:C2}",grandPrevWkLaborCost/grandPrevWkLaborHrs)
+                }
+                else
+                {
+                    @("-")
+                }
+            </td>
         </tr>
     </tfoot>
 </table>
