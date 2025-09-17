@@ -58,6 +58,13 @@
 
         public decimal CurrWkCost { get; set; }
         public decimal OBIDEarnedCost { get; set; }
+        public decimal AvgMhrRate { get; set; }
+        public decimal CPI { get; set; }
+        public decimal EACCost_CPI { get; set; }
+        public decimal ETCCost_CPI { get; set; }
+        public decimal ETCHrs_CPI { get; set; }
+        public decimal EACHrs_CPI { get; set; }
+
 
 
     }

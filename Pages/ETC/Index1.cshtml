@@ -42,7 +42,8 @@
                 Dollars
             </th>
             <th colspan="3" class="text-center">Percentages</th>
-            <th></th>
+            <th>CPI</th>
+            <th colspan="4" class="text-center">CPI Calcs</th>
         </tr>
 
         <tr class="custom-header-costrpt2">
@@ -69,6 +70,10 @@
             <th class="align-middle text-center">R = <br/> M/L</th>
             <th class="align-middle text-center">S</th>
             <th class="align-middle text-center">T = <br /> S/R</th>
+            <th class="align-middle text-center">U</th>
+            <th class="align-middle text-center">V</th>
+            <th class="align-middle text-center">W</th>
+            <th class="align-middle text-center">X</th>
         </tr>
 
         <tr class="custom-header-costrpt3">
@@ -108,6 +113,10 @@
             <th class="align-top text-center">% $<br />Spent</th>
             <th class="align-top text-center">% <br /> Complete</th>
             <th class="align-middle text-center">CPI</th>
+            <th class="align-middle text-center">ETC <br />HRS<br />CPI</th>
+            <th class="align-middle text-center">EAC <br />HRS<br />CPI</th>
+            <th class="align-middle text-center">ETC <br />COST<br />CPI</th>
+            <th class="align-middle text-center">EAC <br />COST<br />CPI</th>
         </tr>
     </thead>
     @{
@@ -117,7 +126,8 @@
         decimal totalOB_COST = 0, totalUnApprovedCNCOST = 0, totalApprovedCNCOST = 0;
         decimal totalCURRCOST = 0, totalPrevWkCost = 0, totalEAC_Cost = 0, totalETCCost = 0, totalCurrWkCost = 0;
 
-        decimal totalOBID_EarnedCost = 0;
+        decimal totalOBID_EarnedCost = 0, totalEtcHrsCpi = 0, totalEacHrsCpi = 0;
+        decimal totalEtcCostCpi = 0, totalEacCostCpi = 0;
     }
 
     <tbody>
@@ -137,11 +147,12 @@
             decimal g_OB_COST = 0, g_UnApprovedCNCOST = 0, g_ApprovedCNCOST = 0, g_CURRCOST = 0;
             decimal g_PrevWkCost = 0, g_EAC_Cost = 0, g_ETCCost = 0, g_CurrWkCost = 0;
 
-            decimal g_OBID_EarnedCost = 0;
+            decimal g_OBID_EarnedCost = 0, g_EtcHrsCpi=0,g_EacHrsCpi=0;
+            decimal g_EtcCostCpi = 0, g_EacCostCpi = 0;
 
             <!-- Group Header -->
             <tr style="background-color:#eee; font-weight:bold;">
-                <td colspan="21">@grp.Key.DiscGroup</td>
+                <td colspan="25">@grp.Key.DiscGroup</td>
             </tr>
 
             @foreach (var item in grp)
@@ -166,6 +177,10 @@
                 g_CurrWkCost += item.CurrWkCost;
 
                 g_OBID_EarnedCost += item.OBIDEarnedCost;
+                g_EtcHrsCpi += item.ETCHrs_CPI;
+                g_EacHrsCpi += item.EACHrs_CPI;
+                g_EtcCostCpi += item.ETCCost_CPI;
+                g_EacCostCpi += item.EACCost_CPI;
 
                 <!-- detail row (your existing cells) -->
                 <tr>
@@ -200,13 +215,18 @@
                                         ? (item.PctCompl / (item.PrevWkCumulCost / item.CURRCOST)).ToString("N2")
                                         : "-")
                     </td> *@
-                    <td class="text-right">
+@*                     <td class="text-right">
                         @(item.PctCompl != 0 && item.CURRCOST != 0 && item.PrevWkCumulCost != 0
                                         ? ((item.PrevWkCumulCost / item.CURRCOST) != 0
                                         ? (item.PctCompl / (item.PrevWkCumulCost / item.CURRCOST)).ToString("N2")
                                         : "-")
                                         : "-")
-                    </td>
+                    </td> *@
+                    <td class="text-right"> @item.CPI.ToString("N2") </td>
+                    <td class="text-right"> @item.ETCHrs_CPI.ToString("N2") </td>
+                    <td class="text-right"> @item.EACHrs_CPI.ToString("N2") </td>
+                    <td class="text-right bg-palegreen"> @item.ETCCost_CPI.ToString("C2") </td>
+                    <td class="text-right bg-palegreen"> @item.EACCost_CPI.ToString("C2") </td>
 
         </tr>
                 }
@@ -242,7 +262,16 @@
                 <td class="text-right">
                     @(g_CURRCOST != 0 ? String.Format("{0:P0}", g_OBID_EarnedCost / g_CURRCOST) : "-")
                 </td>
-                <td>0</td>
+
+                <td class="text-right">
+                    @(g_PrevWkCost != 0 ? (g_OBID_EarnedCost / g_PrevWkCost).ToString("N2") : "-")
+                </td>
+
+
+                <td class="text-right">@g_EtcHrsCpi.ToString("N2")</td>
+                <td class="text-right">@g_EacHrsCpi.ToString("N2")</td>
+                <td class="text-right bg-palegreen">@g_EtcCostCpi.ToString("C2")</td>
+                <td class="text-right bg-palegreen">@g_EtcCostCpi.ToString("C2")</td>
             </tr>
         }
     </tbody>
@@ -268,6 +297,10 @@
         var grandEACCost = Model.vwBudgetActuals.Sum(x => x.EAC_Cost);
 
         var grandOBIDEarnedCost = Model.vwBudgetActuals.Sum(x => x.OBIDEarnedCost);
+        var grandEtcHrsCpi = Model.vwBudgetActuals.Sum(x => x.ETCHrs_CPI);
+        var grandEacHrsCpi = Model.vwBudgetActuals.Sum(x => x.EACHrs_CPI);
+        var grandEtcCostCpi = Model.vwBudgetActuals.Sum(x => x.ETCCost_CPI);
+        var grandEacCostCpi = Model.vwBudgetActuals.Sum(x => x.EACCost_CPI);
     }
 
     <tfoot>
@@ -333,6 +366,10 @@
                 }
             </td> *@
             <td>0</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.ETCHrs_CPI).ToString("N2")</td>
+            <td class="text-right col-hours">@Model.vwBudgetActuals.Sum(x => x.EACHrs_CPI).ToString("N2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.ETCCost_CPI).ToString("C2")</td>
+            <td class="bg-palegreen text-right col-dollars">@Model.vwBudgetActuals.Sum(x => x.EACCost_CPI).ToString("C2")</td>
         </tr>
     </tfoot>
 </table>

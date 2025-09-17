@@ -453,7 +453,13 @@ namespace ProjectPano.Model
                             ETC_Cost = Convert.ToDecimal(reader["ETC_Cost"]),
                             CurrWkHrs = Convert.ToDecimal(reader["CurrWkHrs"]),
                             CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"]),
-                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"])
+                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"]),
+                            AvgMhrRate = Convert.ToDecimal(reader["AvgMhrRate"]),
+                            CPI = Convert.ToDecimal(reader["CPI"]),
+                            EACCost_CPI = Convert.ToDecimal(reader["EACCost_CPI"]),
+                            ETCCost_CPI = Convert.ToDecimal(reader["ETCCost_CPI"]),
+                            ETCHrs_CPI = Convert.ToDecimal(reader["ETCHrs_CPI"]),
+                            EACHrs_CPI = Convert.ToDecimal(reader["EACHrs_CPI"])
                         };
 
                         ListVWBudgetActuals.Add(record);
@@ -608,7 +614,13 @@ namespace ProjectPano.Model
                             ETC_Cost = Convert.ToDecimal(reader["ETC_Cost"]),
                             CurrWkHrs = Convert.ToDecimal(reader["CurrWkHrs"]),
                             CurrWkCost = Convert.ToDecimal(reader["CurrWkCost"]),
-                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"])
+                            OBIDEarnedCost = Convert.ToDecimal(reader["OBIDEarnedCost"]),
+                            AvgMhrRate = Convert.ToDecimal(reader["AvgMhrRate"]),
+                            CPI = Convert.ToDecimal(reader["CPI"]),
+                            EACCost_CPI = Convert.ToDecimal(reader["EACCost_CPI"]),
+                            ETCCost_CPI = Convert.ToDecimal(reader["ETCCost_CPI"]),
+                            ETCHrs_CPI = Convert.ToDecimal(reader["ETCHrs_CPI"]),
+                            EACHrs_CPI = Convert.ToDecimal(reader["EACHrs_CPI"])
                         };
 
                         ListVWBudgetActualsAllActive.Add(record);

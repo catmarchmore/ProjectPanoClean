@@ -56,7 +56,7 @@
               "RelativeDocumentMoniker": "Pages\\ETC\\Index1.cshtml",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\ETC\\Index1.cshtml",
               "RelativeToolTip": "Pages\\ETC\\Index1.cshtml",
-              "ViewState": "AgIAAJAAAAAAAAAAAAAAAJYAAAA6AAAAAAAAAA==",
+              "ViewState": "AgIAAPMAAAAAAAAAAAAAAAwBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-15T23:26:04.359Z",
               "EditorCaption": ""
@@ -84,8 +84,7 @@
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml",
               "ViewState": "AgIAAA4AAAAAAAAAAAAvwCIAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-09T23:48:59.821Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T23:48:59.821Z"
             },
             {
               "$type": "Document",
@@ -97,8 +96,7 @@
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml.cs",
               "ViewState": "AgIAAPgAAAAAAAAAAAAmwAABAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T23:49:04.817Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T23:49:04.817Z"
             },
             {
               "$type": "Document",
@@ -132,7 +130,7 @@
               "RelativeDocumentMoniker": "Model\\DAL.cs",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Model\\DAL.cs",
               "RelativeToolTip": "Model\\DAL.cs",
-              "ViewState": "AgIAAP8IAAAAAAAAAAAvwAkJAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAK8BAAAAAAAAAAAvwL8BAABZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T19:32:46.512Z",
               "EditorCaption": ""
