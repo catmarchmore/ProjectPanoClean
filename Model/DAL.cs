@@ -2299,7 +2299,13 @@ namespace ProjectPano.Model
                         SELECT d.DeliverableID,d.JobID,d.OBID, d.myTask,d.DelGp1,d.DelGp2,d.DelGp3,d.DelGp4,
                         d.DelName,d.DelComment,d.DelHours,d.DelCost,d.DelPctCumul, d.DelEarnedHrs,d.DelEarnedCost,
                         d.progressDate,d.Direct,d.DirPct,d.PlanFinishDate,d.PlanStartDate,
-                        b.CURRHRS, b.CURRCOST
+                        b.CURRHRS, b.CURRCOST,
+DelTypeID,
+Step1Limit,Step2Limit,Step3Limit,Step4Limit,Step5Limit,
+Step1StatusID,Step2StatusID,Step3StatusID,Step4StatusID,Step5StatusID,
+Step1EV,Step2EV,Step3EV,Step4EV,Step5EV
+Step1PctCumul,Step2PctCumul,Step3PctCumul,Step4PctCumul,Step5PctCumul,
+MaxSteps,ActiveStep
                         FROM vwDeliverableHist d
                         LEFT JOIN vwBudgetActuals_Revised b
                         ON d.OBID = b.OBID AND d.JobID = b.JobID
@@ -2339,7 +2345,37 @@ namespace ProjectPano.Model
                         PlanFinishDate = reader.IsDBNull(reader.GetOrdinal("PlanFinishDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanFinishDate")),
                         PlanStartDate = reader.IsDBNull(reader.GetOrdinal("PlanStartDate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("PlanStartDate")),
                         CURRHRS = reader.IsDBNull(reader.GetOrdinal("CURRHRS")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRHRS")),
-                        CURRCOST = reader.IsDBNull(reader.GetOrdinal("CURRCOST")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRCOST"))
+                        CURRCOST = reader.IsDBNull(reader.GetOrdinal("CURRCOST")) ? 0 : reader.GetDecimal(reader.GetOrdinal("CURRCOST")),
+
+                        DelTypeID = reader.GetInt32(reader.GetOrdinal("DelTypeID")),
+
+                        Step1Limit = reader.IsDBNull(reader.GetOrdinal("Step1Limit")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step1Limit")),
+                        Step2Limit = reader.IsDBNull(reader.GetOrdinal("Step2Limit")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step2Limit")),
+                        Step3Limit = reader.IsDBNull(reader.GetOrdinal("Step3Limit")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step3Limit")),
+                        Step4Limit = reader.IsDBNull(reader.GetOrdinal("Step4Limit")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step4Limit")),
+                        Step5Limit = reader.IsDBNull(reader.GetOrdinal("Step5Limit")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step5Limit")),
+
+                        Step1StatusID = reader.GetInt32(reader.GetOrdinal("Step1StatusID")),
+                        Step2StatusID = reader.GetInt32(reader.GetOrdinal("Step2StatusID")),
+                        Step3StatusID = reader.GetInt32(reader.GetOrdinal("Step3StatusID")),
+                        Step4StatusID = reader.GetInt32(reader.GetOrdinal("Step4StatusID")),
+                        Step5StatusID = reader.GetInt32(reader.GetOrdinal("Step5StatusID")),
+
+                        Step1EV = reader.IsDBNull(reader.GetOrdinal("Step1EV")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step1EV")),
+                        Step2EV = reader.IsDBNull(reader.GetOrdinal("Step2EV")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step2EV")),
+                        Step3EV = reader.IsDBNull(reader.GetOrdinal("Step3EV")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step3EV")),
+                        Step4EV = reader.IsDBNull(reader.GetOrdinal("Step4EV")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step4EV")),
+                        Step5EV = reader.IsDBNull(reader.GetOrdinal("Step5EV")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step5EV")),
+
+                        Step1PctCumul = reader.IsDBNull(reader.GetOrdinal("Step1PctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step1PctCumul")),
+                        Step2PctCumul = reader.IsDBNull(reader.GetOrdinal("Step2PctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step2PctCumul")),
+                        Step3PctCumul = reader.IsDBNull(reader.GetOrdinal("Step3PctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step3PctCumul")),
+                        Step4PctCumul = reader.IsDBNull(reader.GetOrdinal("Step4PctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step4PctCumul")),
+                        Step5PctCumul = reader.IsDBNull(reader.GetOrdinal("Step5PctCumul")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Step5PctCumul")),
+
+                        MaxSteps = reader.GetInt32(reader.GetOrdinal("MaxSteps")),
+
+                        ActiveStep = reader.IsDBNull(reader.GetOrdinal("ActiveStep")) ? null : reader.GetString(reader.GetOrdinal("ActiveStep"))
                     };
 
                     list.Add(deliverable);

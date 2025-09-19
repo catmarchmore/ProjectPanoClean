@@ -31,5 +31,30 @@
         public decimal CURRHRS { get; set; }
         public decimal CURRCOST { get; set; }
 
+        public int? DelTypeID { get; set; }
+        public decimal Step1Limit { get; set; }
+        public decimal Step2Limit { get; set; }
+        public decimal Step3Limit { get; set; }
+        public decimal Step4Limit { get; set; }
+        public decimal Step5Limit { get; set; }
+
+        public int Step1StatusID { get; set; }
+        public int Step2StatusID { get; set; }
+        public int Step3StatusID { get; set; }
+        public int Step4StatusID { get; set; }
+        public int Step5StatusID { get; set; }
+        public decimal Step1EV { get; set; }
+        public decimal Step2EV { get; set; }
+        public decimal Step3EV { get; set; }
+        public decimal Step4EV { get; set; }
+        public decimal Step5EV { get; set; }
+        public decimal Step1PctCumul { get; set; }
+        public decimal Step2PctCumul { get; set; }
+        public decimal Step3PctCumul { get; set; }
+        public decimal Step4PctCumul { get; set; }
+        public decimal Step5PctCumul { get; set; }
+        public int MaxSteps { get; set; }
+        public string ActiveStep { get; set; }
+
     }
 }

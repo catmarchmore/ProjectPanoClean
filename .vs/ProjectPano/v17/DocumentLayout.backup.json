@@ -3,20 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\progress.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\deliverables\\progress.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:model\\dal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\deliverables\\progress.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|solutionrelative:pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E67B9D39-D0DC-4489-9128-F39C9C4420CF}|ProjectPano.csproj|c:\\users\\catherine.moritz\\source\\repos\\projectpanoclean\\projectpano\\pages\\deliverables\\upload.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -34,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 159,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,7 +46,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "Pages\\Shared\\_Layout.cshtml",
@@ -59,7 +59,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Progress.cshtml",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Progress.cshtml",
@@ -67,19 +67,21 @@
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml",
               "ViewState": "AgIAAHIAAAAAAAAAAAAAABYAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-09T23:48:59.821Z"
+              "WhenOpened": "2025-09-09T23:48:59.821Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "Progress.cshtml.cs",
               "DocumentMoniker": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Deliverables\\Progress.cshtml.cs",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Pages\\Deliverables\\Progress.cshtml.cs",
               "RelativeToolTip": "Pages\\Deliverables\\Progress.cshtml.cs",
-              "ViewState": "AgIAAPgAAAAAAAAAAAAmwAABAAAyAAAAAAAAAA==",
+              "ViewState": "AgIAAMAAAAAAAAAAAAAcwMMAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T23:49:04.817Z"
+              "WhenOpened": "2025-09-09T23:49:04.817Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -113,9 +115,10 @@
               "RelativeDocumentMoniker": "Model\\DAL.cs",
               "ToolTip": "C:\\Users\\catherine.moritz\\source\\repos\\ProjectPanoClean\\ProjectPano\\Model\\DAL.cs",
               "RelativeToolTip": "Model\\DAL.cs",
-              "ViewState": "AgIAAIwAAAAAAAAAAAAuwJ4AAABOAAAAAAAAAA==",
+              "ViewState": "AgIAAEQJAAAAAAAAAAAswEcJAABSAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T19:32:46.512Z"
+              "WhenOpened": "2025-09-09T19:32:46.512Z",
+              "EditorCaption": ""
             }
           ]
         }
